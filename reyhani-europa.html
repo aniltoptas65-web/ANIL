@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reyhani Europa – Auf dem Weg des Herzens</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+/* ── VARIABLES ── */
+:root{
+  --cr:#8B1014; --cr-d:#6A0C0F; --cr-l:#C0202A;
+  --ol:#527228; --ol-l:#6A9038;
+  --pa:#F8F4EE; --pa-d:#EBE2D4;
+  --go:#C8A870; --go-l:#DEC090;
+  --dk:#191616; --md:#4A4545; --lt:#8A8484; --wh:#fff;
+}
+
+/* ── RESET ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;font-size:16px;line-height:1.65;color:var(--dk);background:var(--wh);overflow-x:hidden}
+a{text-decoration:none}
+
+/* ── BUTTONS ── */
+.btn-solid,.btn-ghost{
+  display:inline-block;
+  font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:500;
+  letter-spacing:.09em;text-transform:uppercase;
+  padding:.82rem 1.85rem;cursor:pointer;border:none;transition:all .22s
+}
+.btn-solid{background:var(--cr);color:var(--wh)}
+.btn-solid:hover{background:var(--cr-d)}
+.btn-ghost{background:transparent;color:var(--cr);border:1.5px solid var(--cr)}
+.btn-ghost:hover{background:var(--cr);color:var(--wh)}
+
+/* ── EYEBROW ── */
+.eyebrow{
+  font-size:.7rem;font-weight:500;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--ol);display:flex;align-items:center;gap:.5rem;margin-bottom:.65rem
+}
+.eyebrow::before{content:'';width:20px;height:1px;background:var(--ol);flex-shrink:0}
+.eyebrow-c{justify-content:center}
+.eyebrow-c::before{display:none}
+.eyebrow-g{color:var(--go-l)}
+.eyebrow-g::before{background:var(--go-l)}
+
+/* ── NAV ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:999;
+  height:64px;background:rgba(255,255,255,.96);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid rgba(139,16,20,.1);
+  padding:0 2rem;
+  display:flex;align-items:center;justify-content:space-between
+}
+.nav-logo{display:flex;flex-direction:column;line-height:1}
+.nav-r{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.5rem;font-weight:700;color:var(--cr);letter-spacing:-.01em
+}
+.nav-e{
+  font-size:.57rem;font-weight:400;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--lt);text-align:right
+}
+.nav-links{display:flex;list-style:none;align-items:center;gap:1.75rem}
+.nav-links a{font-size:.83rem;color:var(--md);transition:color .2s}
+.nav-links a:hover{color:var(--cr)}
+.nav-cta{
+  background:var(--cr)!important;color:var(--wh)!important;
+  padding:.42rem 1.1rem;font-size:.72rem!important;
+  letter-spacing:.09em!important;text-transform:uppercase
+}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:4px}
+.hamburger span{display:block;width:24px;height:1.5px;background:var(--dk)}
+.mob-nav{
+  display:none;position:fixed;top:64px;left:0;right:0;
+  background:var(--wh);border-bottom:2px solid var(--cr);
+  z-index:998;padding:1.5rem 2rem
+}
+.mob-nav.open{display:block}
+.mob-nav ul{list-style:none;display:flex;flex-direction:column;gap:1rem}
+.mob-nav a{font-size:1rem;color:var(--md)}
+.mob-nav a:hover{color:var(--cr)}
+
+/* ── HERO ── */
+.hero{
+  min-height:100vh;background:var(--pa);
+  position:relative;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  padding:6rem 2rem 4rem
+}
+.hero::before{
+  content:'';position:absolute;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cpolygon points='45,5 52,29 73,17 61,39 85,45 61,52 73,73 52,61 45,85 39,61 17,73 29,52 5,45 29,39 17,17 39,29' fill='none' stroke='%238B1014' stroke-width='0.5' opacity='0.09'/%3E%3C/svg%3E");
+  background-size:90px 90px
+}
+.hero-inner{position:relative;z-index:1;text-align:center;max-width:700px}
+
+/* LOGO BLOCK */
+.logo-block{display:inline-flex;flex-direction:column;align-items:flex-start;margin-bottom:2.5rem}
+.logo-wordwrap{position:relative;display:inline-block}
+.logo-word{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(3.6rem,9vw,6.2rem);
+  font-weight:700;color:var(--cr);line-height:1;letter-spacing:-.015em
+}
+.logo-leaves{
+  position:absolute;
+  bottom:calc(100% - 10px);
+  left:42%;transform:translateX(-50%);
+  pointer-events:none;overflow:visible
+}
+.logo-europa{
+  font-family:'DM Sans',sans-serif;
+  font-size:clamp(.85rem,2vw,1.15rem);
+  font-weight:300;color:var(--cr);
+  letter-spacing:.42em;text-transform:uppercase;
+  align-self:flex-end;margin-top:.4rem
+}
+.hero-rule{width:48px;height:1px;background:var(--go);margin:2rem auto}
+.hero-h1{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(1.45rem,3vw,2.1rem);
+  font-style:italic;font-weight:400;color:var(--dk);margin-bottom:.75rem
+}
+.hero-p{
+  font-size:.95rem;font-weight:300;color:var(--md);
+  max-width:440px;margin:0 auto 2.5rem;line-height:1.85
+}
+.btn-row{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap}
+
+/* ── LAYOUT UTILS ── */
+.sec{padding:5.5rem 2rem}
+.wrap{max-width:1140px;margin:0 auto}
+.sec-h2{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(1.9rem,3.5vw,2.9rem);
+  font-weight:600;color:var(--dk);margin-bottom:1.2rem
+}
+
+/* ── ABOUT ── */
+.about{background:var(--wh)}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:center}
+.about-text p{font-size:1rem;color:var(--md);line-height:1.85;margin-bottom:1.1rem}
+.about-quote{
+  border-left:3px solid var(--cr);padding-left:1.2rem;
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.25rem;font-style:italic;color:var(--cr);line-height:1.5;margin:2rem 0
+}
+.about-box{background:var(--pa);padding:2.75rem;position:relative}
+.about-box::before{
+  content:'';position:absolute;
+  top:-7px;left:-7px;right:7px;bottom:7px;
+  border:1.5px solid var(--go);z-index:0
+}
+.about-box-in{position:relative;z-index:1}
+.about-lbl{
+  font-size:.65rem;letter-spacing:.17em;text-transform:uppercase;
+  color:var(--cr);font-weight:500;margin-bottom:1.1rem
+}
+.stat-row{margin-bottom:1.4rem}
+.stat-n{
+  font-family:'Cormorant Garamond',serif;
+  font-size:2.75rem;font-weight:700;color:var(--dk);line-height:1
+}
+.stat-l{font-size:.8rem;color:var(--lt);font-weight:300;margin-top:.15rem}
+.stat-sep{
+  display:flex;align-items:center;justify-content:center;
+  margin:1.25rem 0;position:relative
+}
+.stat-sep::before{
+  content:'';position:absolute;left:0;right:0;
+  top:50%;height:1px;background:var(--pa-d);z-index:0
+}
+.stat-sep svg{position:relative;z-index:1;background:var(--pa);padding:0 5px}
+
+/* ── PILLARS ── */
+.pillars{background:var(--pa-d)}
+.pillars-head{text-align:center;max-width:540px;margin:0 auto 3.5rem}
+.pillars-head .lead{font-size:.93rem;color:var(--md);margin-top:.5rem}
+.pillars-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px}
+.pc{
+  background:var(--wh);padding:2.75rem 2.25rem;
+  position:relative;overflow:hidden;transition:background .25s
+}
+.pc::after{
+  content:'';position:absolute;
+  bottom:0;left:0;width:0;height:3px;background:var(--cr);
+  transition:width .3s ease
+}
+.pc:hover::after{width:100%}
+.pc:hover{background:var(--pa)}
+.pc-ico{margin-bottom:1.25rem;color:var(--ol)}
+.pc-h3{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.5rem;font-weight:600;color:var(--dk);margin-bottom:.85rem
+}
+.pc-p{font-size:.87rem;color:var(--md);line-height:1.75}
+
+/* ── EVENTS ── */
+.events{background:var(--cr);color:var(--wh)}
+.events-grid{display:grid;grid-template-columns:5fr 7fr;gap:4rem;align-items:start}
+.events .sec-h2{color:var(--wh)}
+.events-intro p{color:rgba(255,255,255,.72);font-size:.93rem;line-height:1.85;margin-bottom:1rem}
+.ev-deet{display:flex;gap:.85rem;align-items:flex-start;margin-bottom:1rem}
+.ev-ico{color:var(--go-l);flex-shrink:0;margin-top:3px}
+.ev-lbl{font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--go-l);display:block;margin-bottom:.15rem}
+.ev-val{font-size:.88rem;color:rgba(255,255,255,.82)}
+.ev-list{display:flex;flex-direction:column;gap:1px}
+.ev-item{
+  background:rgba(255,255,255,.08);padding:1.3rem 1.4rem;
+  display:flex;gap:1.2rem;align-items:flex-start;
+  cursor:pointer;transition:background .2s
+}
+.ev-item:hover{background:rgba(255,255,255,.14)}
+.ev-badge{
+  background:rgba(200,168,112,.15);border:1px solid rgba(200,168,112,.3);
+  padding:.4rem .65rem;text-align:center;min-width:48px;flex-shrink:0
+}
+.ev-day{
+  display:block;font-family:'Cormorant Garamond',serif;
+  font-size:1.65rem;font-weight:700;color:var(--go-l);line-height:1
+}
+.ev-mon{display:block;font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45);margin-top:.1rem}
+.ev-name{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:600;color:var(--wh);margin-bottom:.2rem}
+.ev-meta{font-size:.77rem;color:rgba(255,255,255,.48)}
+
+/* ── BLOG ── */
+.blog{background:var(--wh)}
+.blog-top{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:2.5rem}
+.blog-mehr{font-size:.8rem;color:var(--cr);font-weight:500;display:flex;align-items:center;gap:.3rem;transition:gap .2s}
+.blog-mehr:hover{gap:.55rem}
+.blog-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.75rem}
+.bc{border:1px solid var(--pa-d);overflow:hidden;transition:border-color .22s}
+.bc:hover{border-color:var(--go)}
+.bc-img{height:185px;background:var(--pa);position:relative;overflow:hidden}
+.bc-pat{width:100%;height:100%;background-repeat:repeat;background-size:50px 50px}
+.bc-pat-cr{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50'%3E%3Cpolygon points='25,3 29,13 39,8 33,17 42,17 35,22 42,27 33,27 39,36 29,31 25,41 21,31 11,36 17,27 8,27 15,22 8,17 17,17 11,8 21,13' fill='none' stroke='%238B1014' stroke-width='0.4' opacity='0.14'/%3E%3C/svg%3E")}
+.bc-pat-ol{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50'%3E%3Cpolygon points='25,3 29,13 39,8 33,17 42,17 35,22 42,27 33,27 39,36 29,31 25,41 21,31 11,36 17,27 8,27 15,22 8,17 17,17 11,8 21,13' fill='none' stroke='%23527228' stroke-width='0.4' opacity='0.14'/%3E%3C/svg%3E")}
+.bc-pat-go{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50'%3E%3Cpolygon points='25,3 29,13 39,8 33,17 42,17 35,22 42,27 33,27 39,36 29,31 25,41 21,31 11,36 17,27 8,27 15,22 8,17 17,17 11,8 21,13' fill='none' stroke='%23C8A870' stroke-width='0.4' opacity='0.2'/%3E%3C/svg%3E")}
+.bc-tag{
+  position:absolute;top:.85rem;left:.85rem;
+  background:var(--cr);color:var(--wh);
+  font-size:.6rem;font-weight:500;letter-spacing:.09em;text-transform:uppercase;padding:.22rem .5rem
+}
+.bc-body{padding:1.3rem}
+.bc-h3{font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--dk);margin-bottom:.6rem;line-height:1.35}
+.bc-p{font-size:.83rem;color:var(--lt);line-height:1.65}
+.bc-foot{padding:.1rem 1.3rem 1.1rem;display:flex;justify-content:flex-end}
+.bc-read{font-size:.77rem;color:var(--cr);font-weight:500}
+.bc-read:hover{text-decoration:underline}
+
+/* ── CTA BAND ── */
+.cta-band{
+  background:var(--pa);padding:5.5rem 2rem;
+  text-align:center;position:relative;overflow:hidden
+}
+.cta-band::before{
+  content:'';position:absolute;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cpolygon points='45,5 52,29 73,17 61,39 85,45 61,52 73,73 52,61 45,85 39,61 17,73 29,52 5,45 29,39 17,17 39,29' fill='none' stroke='%23527228' stroke-width='0.5' opacity='0.07'/%3E%3C/svg%3E");
+  background-size:90px 90px
+}
+.cta-band .wrap{position:relative;z-index:1}
+.cta-h2{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(1.9rem,4vw,3.2rem);font-weight:600;
+  color:var(--dk);margin-bottom:.85rem
+}
+.cta-p{font-size:.95rem;color:var(--md);max-width:440px;margin:0 auto 2.25rem}
+.soc-links{display:flex;justify-content:center;gap:2.5rem;flex-wrap:wrap;margin-top:2.75rem}
+.soc-link{text-align:center}
+.soc-lbl{font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--lt);display:block;margin-bottom:.35rem}
+.soc-link a{color:var(--cr);font-size:.88rem;font-weight:500}
+.soc-link a:hover{color:var(--cr-d)}
+.soc-dot{color:var(--pa-d);align-self:center}
+
+/* ── FOOTER ── */
+footer{background:#130F0F;padding:4rem 2rem 2rem}
+.foot-grid{
+  max-width:1140px;margin:0 auto;
+  display:grid;grid-template-columns:2.5fr 1fr 1fr 1fr;gap:3rem;
+  padding-bottom:3rem;border-bottom:1px solid rgba(255,255,255,.07)
+}
+.foot-r{font-family:'Cormorant Garamond',serif;font-size:1.55rem;font-weight:700;color:var(--cr-l);line-height:1}
+.foot-e{font-size:.57rem;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.22);display:block;margin-bottom:1.25rem}
+.foot-desc{font-size:.82rem;color:rgba(255,255,255,.4);line-height:1.75;margin-bottom:1.5rem}
+.foot-social{display:flex;gap:.55rem}
+.foot-social a{
+  width:34px;height:34px;
+  border:1px solid rgba(255,255,255,.12);
+  display:flex;align-items:center;justify-content:center;
+  color:rgba(255,255,255,.42);font-size:.7rem;font-weight:600;transition:all .2s
+}
+.foot-social a:hover{background:var(--cr);border-color:var(--cr);color:var(--wh)}
+.foot-col h4{font-size:.63rem;font-weight:500;letter-spacing:.17em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-bottom:1.1rem}
+.foot-col ul{list-style:none}
+.foot-col li{margin-bottom:.6rem}
+.foot-col a{color:rgba(255,255,255,.45);font-size:.82rem;transition:color .2s}
+.foot-col a:hover{color:rgba(255,255,255,.8)}
+.foot-bottom{
+  max-width:1140px;margin:1.75rem auto 0;
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:.72rem;color:rgba(255,255,255,.22)
+}
+.foot-bottom a{color:rgba(255,255,255,.22)}
+.foot-bottom a:hover{color:rgba(255,255,255,.5)}
+
+/* ── LEAF DIVIDER ── */
+.leaf-sep{display:flex;align-items:center;justify-content:center;gap:.75rem;margin:1.75rem 0}
+.leaf-sep::before,.leaf-sep::after{content:'';flex:0 0 24px;height:1px;background:var(--pa-d)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:960px){
+  .nav-links{display:none}
+  .hamburger{display:flex}
+  .about-grid,.events-grid{grid-template-columns:1fr;gap:2.5rem}
+  .pillars-grid,.blog-grid{grid-template-columns:1fr}
+  .foot-grid{grid-template-columns:1fr 1fr;gap:2rem}
+}
+@media(max-width:560px){
+  .sec{padding:4rem 1.25rem}
+  .hero{padding:5rem 1.25rem 3rem}
+  .cta-band{padding:4rem 1.25rem}
+  footer{padding:3rem 1.25rem 1.5rem}
+  .foot-grid{grid-template-columns:1fr}
+  .foot-bottom{flex-direction:column;gap:.5rem;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav id="main-nav">
+  <a href="#" class="nav-logo">
+    <span class="nav-r">reyhani</span>
+    <span class="nav-e">europa</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#about">Über uns</a></li>
+    <li><a href="#pillars">Unsere Arbeit</a></li>
+    <li><a href="#events">Veranstaltungen</a></li>
+    <li><a href="#blog">Islam &amp; Sufismus</a></li>
+    <li><a href="#cta">Kontakt</a></li>
+    <li><a href="#cta" class="nav-cta">Spenden</a></li>
+  </ul>
+  <button class="hamburger" id="burger" aria-label="Menü">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+<div class="mob-nav" id="mob-nav">
+  <ul>
+    <li><a href="#about">Über uns</a></li>
+    <li><a href="#pillars">Unsere Arbeit</a></li>
+    <li><a href="#events">Veranstaltungen</a></li>
+    <li><a href="#blog">Islam &amp; Sufismus</a></li>
+    <li><a href="#cta">Kontakt</a></li>
+    <li><a href="#cta">Spenden</a></li>
+  </ul>
+</div>
+
+<!-- ── HERO ── -->
+<section class="hero" id="hero">
+  <div class="hero-inner">
+
+    <!-- Logo-Nachbildung -->
+    <div class="logo-block">
+      <div class="logo-wordwrap">
+        <!-- Blatt-Motiv oberhalb des 'h' in reyhani -->
+        <svg class="logo-leaves" width="52" height="44" viewBox="0 0 52 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- linkes Blatt -->
+          <path d="M25 42 Q10 22 16 5 Q21 -2 25 8 Z" fill="#3D5C1E" opacity="0.88"/>
+          <!-- rechtes Blatt (heller, vorne) -->
+          <path d="M27 42 Q42 22 36 5 Q31 -2 27 8 Z" fill="#527228"/>
+        </svg>
+        <span class="logo-word">reyhani</span>
+      </div>
+      <span class="logo-europa">europa</span>
+    </div>
+
+    <div class="hero-rule"></div>
+    <h1 class="hero-h1">Auf dem Weg des Herzens.</h1>
+    <p class="hero-p">Eine europäische Gemeinschaft, die den Islam in seiner spirituellen Tiefe erlebbar macht – durch Sohbet, Zikr und gelebte Nächstenliebe.</p>
+    <div class="btn-row">
+      <a href="#about" class="btn-solid">Über uns</a>
+      <a href="#events" class="btn-ghost">Veranstaltungen</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── ABOUT ── -->
+<section class="about sec" id="about">
+  <div class="wrap">
+    <div class="about-grid">
+
+      <div class="about-text">
+        <p class="eyebrow">Was ist Reyhani Europa</p>
+        <h2 class="sec-h2">Eine Gemeinschaft für Herz und Seele</h2>
+        <p>Reyhani Europa ist eine islamische Gemeinschaft, die sich den Lehren des Sufismus verpflichtet hat. Verwurzelt in der islamischen Tradition und gleichzeitig mitten in der europäischen Gesellschaft verankert, begleiten wir Menschen auf ihrem spirituellen Weg.</p>
+        <blockquote class="about-quote">„Das Herz ist der Spiegel des Lichtes. Reinige ihn durch Zikr und durch den gemeinsamen Sohbet."</blockquote>
+        <p>Durch regelmäßige Zusammenkünfte, islamische Bildung und soziales Engagement schaffen wir Räume, in denen Glaube gelebt, Gemeinschaft erfahren und der Mensch ganzheitlich begleitet wird.</p>
+        <a href="#pillars" class="btn-ghost" style="margin-top:1.75rem;display:inline-block">Unsere Arbeit entdecken</a>
+      </div>
+
+      <div>
+        <div class="about-box">
+          <div class="about-box-in">
+            <p class="about-lbl">Reyhani Europa im Überblick</p>
+            <div class="stat-row">
+              <div class="stat-n">12+</div>
+              <div class="stat-l">Jahre islamische Gemeinschaftsarbeit in Europa</div>
+            </div>
+            <div class="stat-sep">
+              <svg width="26" height="22" viewBox="0 0 26 22" fill="none">
+                <path d="M12 20 Q4 12 7 3 Q9 -1 12 5 Z" fill="#527228" opacity="0.6"/>
+                <path d="M14 20 Q22 12 19 3 Q17 -1 14 5 Z" fill="#3D5C1E" opacity="0.55"/>
+              </svg>
+            </div>
+            <div class="stat-row">
+              <div class="stat-n">500+</div>
+              <div class="stat-l">Aktive Mitglieder in Deutschland, Österreich &amp; der Schweiz</div>
+            </div>
+            <div class="stat-sep">
+              <svg width="26" height="22" viewBox="0 0 26 22" fill="none">
+                <path d="M12 20 Q4 12 7 3 Q9 -1 12 5 Z" fill="#527228" opacity="0.6"/>
+                <path d="M14 20 Q22 12 19 3 Q17 -1 14 5 Z" fill="#3D5C1E" opacity="0.55"/>
+              </svg>
+            </div>
+            <div class="stat-row">
+              <div class="stat-n">Wöchentlich</div>
+              <div class="stat-l">Sohbet-Abende und Zikr-Zeremonien in ganz Europa</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── PILLARS ── -->
+<section class="pillars sec" id="pillars">
+  <div class="wrap">
+    <div class="pillars-head">
+      <p class="eyebrow eyebrow-c">Unsere drei Bereiche</p>
+      <h2 class="sec-h2">Was wir tun</h2>
+      <p class="lead">Spiritualität, Wissen und Gemeinschaft – drei Säulen, die unser Wirken in Europa tragen.</p>
+    </div>
+    <div class="pillars-grid">
+
+      <!-- Sohbet & Zikr -->
+      <div class="pc">
+        <div class="pc-ico">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <path d="M26 7 C18 7 11 13 11 20 C11 27 18 33 26 33 C22 30 19 26 19 20 C19 14 22 10 26 7Z"/>
+            <circle cx="30" cy="13" r="1.5" fill="currentColor"/>
+            <circle cx="32" cy="19" r="1" fill="currentColor"/>
+            <circle cx="29" cy="8" r="1" fill="currentColor"/>
+          </svg>
+        </div>
+        <h3 class="pc-h3">Sohbet &amp; Zikr</h3>
+        <p class="pc-p">Im Mittelpunkt unserer Gemeinschaft stehen das gemeinsame Gottesgedenken (Zikr) und spirituelle Gespräche (Sohbet). Diese wöchentlichen Zusammenkünfte nähren Herz und Seele.</p>
+      </div>
+
+      <!-- Islam & Sufismus -->
+      <div class="pc">
+        <div class="pc-ico">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M7 10 L20 7 L33 10 L33 32 L20 35 L7 32 Z"/>
+            <line x1="20" y1="7" x2="20" y2="35"/>
+            <path d="M12 16 C14 15 17 15.5 20 15"/>
+            <path d="M12 21 C14 20 17 20.5 20 20"/>
+            <path d="M28 16 C26 15 23 15.5 20 15"/>
+            <path d="M28 21 C26 20 23 20.5 20 20"/>
+          </svg>
+        </div>
+        <h3 class="pc-h3">Islam &amp; Sufismus</h3>
+        <p class="pc-p">Durch Vorträge, Seminare und Artikel zu Tefsir, Sunna und dem Nefs vermitteln wir islamisches Wissen auf verständliche und lebensnahe Weise – auf Deutsch und Türkisch.</p>
+      </div>
+
+      <!-- Gemeinschaft & Soziales -->
+      <div class="pc">
+        <div class="pc-ico">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <circle cx="14" cy="13" r="4"/>
+            <circle cx="26" cy="13" r="4"/>
+            <path d="M7 32 C7 25 10 21 14 21"/>
+            <path d="M33 32 C33 25 30 21 26 21"/>
+            <path d="M14 21 C16 23 20 24 26 21"/>
+            <path d="M14 32 C16 30 20 29 26 32"/>
+          </svg>
+        </div>
+        <h3 class="pc-h3">Gemeinschaft &amp; Soziales</h3>
+        <p class="pc-p">Nächstenliebe ist gelebte Praxis: Seelsorge, Kranken- und Seniorenbesuche sowie Blutspendenaktionen – wir sind da, wo wir gebraucht werden.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── EVENTS ── -->
+<section class="events sec" id="events">
+  <div class="wrap">
+    <div class="events-grid">
+
+      <div class="events-intro">
+        <p class="eyebrow eyebrow-g">Veranstaltungen</p>
+        <h2 class="sec-h2">Sei dabei</h2>
+        <p>Bei Reyhani Europa treffen sich Menschen, die gemeinsam den Weg des Herzens gehen möchten. Unsere Veranstaltungen stehen allen Interessierten offen – komm einfach vorbei.</p>
+        <div style="margin-top:1.75rem">
+          <div class="ev-deet">
+            <svg class="ev-ico" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            <div><span class="ev-lbl">Regelmäßigkeit</span><span class="ev-val">Jeden Freitag &amp; Samstag Abend</span></div>
+          </div>
+          <div class="ev-deet">
+            <svg class="ev-ico" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <div><span class="ev-lbl">Standorte</span><span class="ev-val">Nürnberg &amp; weitere Städte in Europa</span></div>
+          </div>
+          <div class="ev-deet">
+            <svg class="ev-ico" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+            <div><span class="ev-lbl">Für wen?</span><span class="ev-val">Offen für alle – live &amp; online</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ev-list">
+        <div class="ev-item">
+          <div class="ev-badge"><span class="ev-day">20</span><span class="ev-mon">Jun</span></div>
+          <div><div class="ev-name">Freitagssohbet – Das Nefs verstehen</div><div class="ev-meta">20:00 Uhr · Nürnberg · Eintritt frei</div></div>
+        </div>
+        <div class="ev-item">
+          <div class="ev-badge"><span class="ev-day">21</span><span class="ev-mon">Jun</span></div>
+          <div><div class="ev-name">Zikr-Zeremonie mit Sohbet</div><div class="ev-meta">20:30 Uhr · Nürnberg · Brüder &amp; Schwestern</div></div>
+        </div>
+        <div class="ev-item">
+          <div class="ev-badge"><span class="ev-day">27</span><span class="ev-mon">Jun</span></div>
+          <div><div class="ev-name">Seminar: Tefsir des Edlen Koran</div><div class="ev-meta">18:00 Uhr · Online &amp; vor Ort</div></div>
+        </div>
+        <div class="ev-item">
+          <div class="ev-badge"><span class="ev-day">05</span><span class="ev-mon">Jul</span></div>
+          <div><div class="ev-name">Blutspendenaktion – Gemeinsam für die Gesellschaft</div><div class="ev-meta">09:00–14:00 Uhr · Nürnberg · DRK-Kooperation</div></div>
+        </div>
+        <div class="ev-item">
+          <div class="ev-badge"><span class="ev-day">12</span><span class="ev-mon">Jul</span></div>
+          <div><div class="ev-name">Familienseminar: Islam im Alltag</div><div class="ev-meta">15:00 Uhr · Nürnberg · Für Familien</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── BLOG ── -->
+<section class="blog sec" id="blog">
+  <div class="wrap">
+    <div class="blog-top">
+      <div>
+        <p class="eyebrow">Islam &amp; Sufismus</p>
+        <h2 class="sec-h2">Wissen, das bewegt</h2>
+      </div>
+      <a href="#" class="blog-mehr">Alle Beiträge →</a>
+    </div>
+    <div class="blog-grid">
+
+      <div class="bc">
+        <div class="bc-img"><div class="bc-pat bc-pat-cr"></div><span class="bc-tag">Sufismus</span></div>
+        <div class="bc-body">
+          <h3 class="bc-h3">Das Nefs – Die Triebseele und der Weg zur inneren Reinigung</h3>
+          <p class="bc-p">Was ist das Nefs? Wie beeinflusst es unser Verhalten – und wie können wir uns durch Selbstreflexion und Zikr läutern?</p>
+        </div>
+        <div class="bc-foot"><a href="#" class="bc-read">Weiterlesen →</a></div>
+      </div>
+
+      <div class="bc">
+        <div class="bc-img"><div class="bc-pat bc-pat-ol"></div><span class="bc-tag">Islam</span></div>
+        <div class="bc-body">
+          <h3 class="bc-h3">Die Bedeutung der Sunna im Leben eines gläubigen Muslims</h3>
+          <p class="bc-p">Die Sunna ist weit mehr als Überlieferung. Sie ist der lebendige Ausdruck des prophetischen Weges – ein Spiegel für unser tägliches Handeln.</p>
+        </div>
+        <div class="bc-foot"><a href="#" class="bc-read">Weiterlesen →</a></div>
+      </div>
+
+      <div class="bc">
+        <div class="bc-img"><div class="bc-pat bc-pat-go"></div><span class="bc-tag">Tefsir</span></div>
+        <div class="bc-body">
+          <h3 class="bc-h3">Tefsir: Den Edlen Koran verstehen und ins Leben integrieren</h3>
+          <p class="bc-p">Eine Einführung in Methoden und Bedeutung der Koranexegese für Muslime in Europa – klar, zugänglich und praxisnah erklärt.</p>
+        </div>
+        <div class="bc-foot"><a href="#" class="bc-read">Weiterlesen →</a></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA ── -->
+<section class="cta-band" id="cta">
+  <div class="wrap">
+    <div class="leaf-sep">
+      <svg width="32" height="28" viewBox="0 0 32 28" fill="none">
+        <path d="M15 26 Q6 17 9 6 Q11 0 15 5 Z" fill="#527228" opacity="0.55"/>
+        <path d="M17 26 Q26 17 23 6 Q21 0 17 5 Z" fill="#3D5C1E" opacity="0.5"/>
+      </svg>
+    </div>
+    <h2 class="cta-h2">#ohnedichfehlteiner</h2>
+    <p class="cta-p">Werde Teil unserer Gemeinschaft. Komm vorbei, folge uns auf Social Media oder unterstütze unsere Arbeit in Europa.</p>
+    <div class="btn-row">
+      <a href="#" class="btn-solid">Jetzt mitmachen</a>
+      <a href="#" class="btn-ghost">Mehr erfahren</a>
+    </div>
+    <div class="soc-links">
+      <div class="soc-link"><span class="soc-lbl">Instagram</span><a href="#">@reyhani_europa</a></div>
+      <div class="soc-dot">·</div>
+      <div class="soc-link"><span class="soc-lbl">YouTube</span><a href="#">Reyhani Europa</a></div>
+      <div class="soc-dot">·</div>
+      <div class="soc-link"><span class="soc-lbl">E-Mail</span><a href="mailto:info@reyhani-europa.de">info@reyhani-europa.de</a></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="foot-grid">
+    <div>
+      <div class="foot-r">reyhani</div>
+      <span class="foot-e">europa</span>
+      <p class="foot-desc">Eine islamische Gemeinschaft in Europa, die den Sufismus lebt und islamische Werte im gesellschaftlichen Alltag trägt.</p>
+      <div class="foot-social">
+        <a href="#">IG</a>
+        <a href="#">YT</a>
+        <a href="#">FB</a>
+      </div>
+    </div>
+    <div class="foot-col">
+      <h4>Organisation</h4>
+      <ul>
+        <li><a href="#">Über uns</a></li>
+        <li><a href="#">Unsere Arbeit</a></li>
+        <li><a href="#">Mitglied werden</a></li>
+        <li><a href="#">Spenden</a></li>
+      </ul>
+    </div>
+    <div class="foot-col">
+      <h4>Inhalte</h4>
+      <ul>
+        <li><a href="#">Islam &amp; Sufismus</a></li>
+        <li><a href="#">Tefsir &amp; Sunna</a></li>
+        <li><a href="#">Vorträge</a></li>
+        <li><a href="#">Podcast</a></li>
+      </ul>
+    </div>
+    <div class="foot-col">
+      <h4>Rechtliches</h4>
+      <ul>
+        <li><a href="#">Impressum</a></li>
+        <li><a href="#">Datenschutz</a></li>
+        <li><a href="#">Kontakt</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <span>© 2026 Reyhani Europa e.V. · Alle Rechte vorbehalten.</span>
+    <div><a href="#">Impressum</a> · <a href="#">Datenschutz</a></div>
+  </div>
+</footer>
+
+<script>
+const burger = document.getElementById('burger');
+const mobNav = document.getElementById('mob-nav');
+burger.addEventListener('click', () => mobNav.classList.toggle('open'));
+mobNav.querySelectorAll('a').forEach(a => a.addEventListener('click', () => mobNav.classList.remove('open')));
+// Close mobile nav on scroll
+window.addEventListener('scroll', () => mobNav.classList.remove('open'));
+</script>
+</body>
+</html>
