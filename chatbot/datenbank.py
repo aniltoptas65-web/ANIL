@@ -15,11 +15,12 @@ CREATE TABLE IF NOT EXISTS seiten (
     url TEXT PRIMARY KEY,
     quelle TEXT NOT NULL,
     titel TEXT,
-    abgerufen TEXT NOT NULL
+    abgerufen TEXT NOT NULL,
+    regel TEXT
 );
 CREATE VIRTUAL TABLE IF NOT EXISTS abschnitte USING fts5(
     text,
-    titel UNINDEXED,
+    titel,
     url UNINDEXED,
     quelle UNINDEXED,
     nur_zusammenfassen UNINDEXED,
@@ -36,7 +37,8 @@ CREATE TABLE IF NOT EXISTS verbrauch (
     tag TEXT NOT NULL,
     modell TEXT NOT NULL,
     eingabe INTEGER NOT NULL,
-    ausgabe INTEGER NOT NULL
+    ausgabe INTEGER NOT NULL,
+    schritt TEXT
 );
 CREATE TABLE IF NOT EXISTS zugaenge (
     name TEXT PRIMARY KEY,
@@ -60,11 +62,46 @@ CODE_LAENGE = 14  # gut 69 Bit Zufall, Durchprobieren ist damit aussichtslos
 NAME_MUSTER = re.compile(r"^[\w .]{1,40}$")
 
 
+def _titel_durchsuchbar_machen(con) -> None:
+    """Ältere Datenbanken hatten den Titel nicht in der Suche. Dann die Tabelle einmal umbauen, Inhalte bleiben."""
+    zeile = con.execute("SELECT sql FROM sqlite_master WHERE name = 'abschnitte'").fetchone()
+    if not zeile or "titel UNINDEXED" not in zeile[0]:
+        return
+    # In einer Transaktion: bricht der Umbau ab, bleibt die alte Tabelle unverändert
+    con.executescript("""
+        BEGIN;
+        ALTER TABLE abschnitte RENAME TO abschnitte_alt;
+        CREATE VIRTUAL TABLE abschnitte USING fts5(
+            text, titel, url UNINDEXED, quelle UNINDEXED, nur_zusammenfassen UNINDEXED,
+            tokenize = 'unicode61 remove_diacritics 2'
+        );
+        INSERT INTO abschnitte (text, titel, url, quelle, nur_zusammenfassen)
+            SELECT text, titel, url, quelle, nur_zusammenfassen FROM abschnitte_alt;
+        DROP TABLE abschnitte_alt;
+        COMMIT;
+    """)
+
+
 def verbinden(pfad: str = None) -> sqlite3.Connection:
     con = sqlite3.connect(pfad or DB_PFAD, check_same_thread=False)
     con.row_factory = sqlite3.Row
+    _titel_durchsuchbar_machen(con)
     con.executescript(SCHEMA)
+    # Ältere Datenbanken kannten den Schritt (verstehen, auswählen, antworten) und die Einleseregel noch nicht
+    for tabelle, spalte in (("verbrauch", "schritt"), ("seiten", "regel")):
+        if spalte not in [z[1] for z in con.execute(f"PRAGMA table_info({tabelle})")]:
+            con.execute(f"ALTER TABLE {tabelle} ADD COLUMN {spalte} TEXT")
+            con.commit()
     return con
+
+
+def _wort(w: str) -> str:
+    """Ein Suchwort als Präfixsuche. Großgeschriebene Titel wie HAYIZ landen in der Suche als "hayiz",
+    im Text steht "hayız". Darum bei ı zusätzlich die Form mit i suchen."""
+    w = w.lower()
+    if "ı" in w:
+        return f'("{w}"* OR "{w.replace("ı", "i")}"*)'
+    return f'"{w}"*'
 
 
 def _fts_ausdruck(begriffe: list[str]) -> str:
@@ -76,7 +113,7 @@ def _fts_ausdruck(begriffe: list[str]) -> str:
             continue
         # Präfixsuche fängt türkische Endungen ab (abdest, abdestin, abdesti).
         # Mehrere Wörter eines Begriffs müssen alle im Abschnitt vorkommen.
-        woerter = [f'"{w}"*' for w in sauber.split()]
+        woerter = [_wort(w) for w in sauber.split()]
         teile.append(woerter[0] if len(woerter) == 1 else "(" + " AND ".join(woerter) + ")")
     return " OR ".join(teile)
 
@@ -85,27 +122,54 @@ def suchen(con: sqlite3.Connection, begriffe: list[str], anzahl: int = 6) -> lis
     ausdruck = _fts_ausdruck(begriffe)
     if not ausdruck:
         return []
+    # Treffer im Titel zählen dreimal so viel wie im Text (bm25 Gewichte in Spaltenreihenfolge)
     zeilen = con.execute(
-        "SELECT text, titel, url, quelle, nur_zusammenfassen, bm25(abschnitte) AS rang "
+        "SELECT rowid AS nr, text, titel, url, quelle, nur_zusammenfassen, bm25(abschnitte, 1.0, 3.0) AS rang "
         "FROM abschnitte WHERE abschnitte MATCH ? ORDER BY rang LIMIT ?",
         (ausdruck, anzahl),
     ).fetchall()
     return [dict(z) for z in zeilen]
 
 
-def verbrauch_buchen(con, modell: str, eingabe: int, ausgabe: int) -> None:
+def abschnitte_nach_nr(con, nummern: list[int]) -> list[dict]:
+    """Bestimmte Abschnitte, zum Beispiel die in der vorigen Antwort zitierten (in dieser Reihenfolge)."""
+    ergebnis = []
+    for nr in nummern:
+        z = con.execute(
+            "SELECT rowid AS nr, text, titel, url, quelle, nur_zusammenfassen FROM abschnitte WHERE rowid = ?", (nr,)
+        ).fetchone()
+        if z:
+            ergebnis.append(dict(z))
+    return ergebnis
+
+
+def abschnitte_von(con, urls: list[str], je_seite: int = 2) -> list[dict]:
+    """Die ersten Abschnitte bestimmter Seiten, falls die zitierten Abschnitte nicht bekannt sind."""
+    ergebnis = []
+    for url in urls:
+        ergebnis += [dict(z) for z in con.execute(
+            "SELECT rowid AS nr, text, titel, url, quelle, nur_zusammenfassen FROM abschnitte WHERE url = ? ORDER BY rowid LIMIT ?",
+            (url, je_seite),
+        )]
+    return ergebnis
+
+
+def verbrauch_buchen(con, modell: str, eingabe: int, ausgabe: int, schritt: str = None) -> None:
     con.execute(
-        "INSERT INTO verbrauch VALUES (?, ?, ?, ?)",
-        (date.today().isoformat(), modell, eingabe, ausgabe),
+        "INSERT INTO verbrauch (tag, modell, eingabe, ausgabe, schritt) VALUES (?, ?, ?, ?, ?)",
+        (date.today().isoformat(), modell, eingabe, ausgabe, schritt),
     )
     con.commit()
 
 
 def fragen_heute(con) -> int:
-    """Zählt die Fragen von heute, die an ein Sprachmodell gingen (jede startet mit genau einem Haiku Aufruf)."""
+    """Zählt die Fragen von heute, die an ein Sprachmodell gingen (jede startet mit genau einem Schritt "verstehen").
+
+    Zeilen aus älteren Versionen ohne Schritt zählen über das Suchmodell, damit der Tageszähler beim Umstieg stimmt.
+    """
     from seyda import SUCH_MODELL  # spätes Import, vermeidet Kreisbezug
     return con.execute(
-        "SELECT COUNT(*) FROM verbrauch WHERE tag = ? AND modell = ?",
+        "SELECT COUNT(*) FROM verbrauch WHERE tag = ? AND (schritt = 'verstehen' OR (schritt IS NULL AND modell = ?))",
         (date.today().isoformat(), SUCH_MODELL),
     ).fetchone()[0]
 

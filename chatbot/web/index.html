@@ -19,6 +19,8 @@
 body{margin:0;background:var(--creme);color:var(--text);font-family:"Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column;min-height:100vh}
 header{background:var(--bordeaux);color:#fff;padding:20px 20px 16px}
 .marke{display:flex;align-items:center;gap:10px}
+.logo{background:var(--creme);border-radius:10px;padding:5px 10px;display:flex;align-items:center;margin-right:4px;flex-shrink:0}
+.logo img{display:block;height:40px;width:auto}
 header h1{margin:0;font-family:"Cormorant Garamond",Georgia,serif;font-size:30px;font-weight:700;letter-spacing:.5px}
 .punkt{width:11px;height:11px;border-radius:6px;background:#3DDC84;box-shadow:0 0 0 2px #fff;flex-shrink:0}
 .punkt.aus{background:#9A8F86}
@@ -32,12 +34,21 @@ main{flex:1;width:100%;max-width:720px;margin:0 auto;padding:20px 16px;display:f
 .quellen{border-top:1px solid var(--sand);padding-top:10px;display:flex;flex-direction:column;gap:6px}
 .quellen span{font-size:12px;font-weight:600;color:var(--oliv);letter-spacing:.4px}
 .quellen a{color:var(--bordeaux)}
-.melden{align-self:flex-end;min-height:44px;padding:0 14px;border:1px solid #C9B9A3;background:transparent;border-radius:22px;font:inherit;font-size:14px;color:#4A3F35;cursor:pointer}
+.knoepfe{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px}
+.melden,.vorlesen{min-height:44px;padding:0 14px;border:1px solid #C9B9A3;background:transparent;border-radius:22px;font:inherit;font-size:14px;color:#4A3F35;cursor:pointer}
+.vorlesen{display:flex;align-items:center;gap:6px}
 .fehler{color:var(--bordeaux)}
 form{position:sticky;bottom:0;background:var(--creme);border-top:1px solid var(--rand);padding:12px 16px 18px}
 .zeile{max-width:720px;margin:0 auto;display:flex;gap:8px}
-input{flex:1;min-height:46px;border:1px solid #C9B9A3;border-radius:23px;padding:0 16px;font:inherit;font-size:16px;background:#fff}
-button.senden{width:46px;height:46px;border:none;border-radius:23px;background:var(--bordeaux);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+input{flex:1;min-width:0;min-height:46px;border:1px solid #C9B9A3;border-radius:23px;padding:0 16px;font:inherit;font-size:16px;background:#fff}
+button.senden,button.mikro{width:46px;height:46px;border:none;border-radius:23px;background:var(--bordeaux);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+button.mikro{background:#fff;color:var(--bordeaux);border:1px solid #C9B9A3}
+button.mikro.an{background:var(--oliv);color:#fff;border-color:var(--oliv)}
+.unterzeile{max-width:720px;margin:6px auto 0;display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;font-size:13px;color:var(--leise)}
+.sprachwahl{display:flex;align-items:center;gap:4px}
+.sprachwahl button{min-height:32px;padding:0 10px;border:1px solid #C9B9A3;background:#fff;border-radius:16px;font:inherit;font-size:13px;color:#4A3F35;cursor:pointer}
+.sprachwahl button[aria-pressed="true"]{background:var(--oliv);border-color:var(--oliv);color:#fff}
+[hidden]{display:none!important}
 button:disabled{opacity:.6}
 .unsichtbar{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 </style>
@@ -45,7 +56,7 @@ button:disabled{opacity:.6}
 <body>
 <header>
   <div class="marke">
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#DEC090" stroke-width="1.6" aria-hidden="true"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9z"/></svg>
+    <span class="logo"><img src="/reyhani_logo.png" alt="Reyhani Europa" width="81" height="40"></span>
     <span id="punkt" class="punkt" role="img" aria-label="Online" title="Online"></span>
     <h1>SeydaAI</h1>
   </div>
@@ -57,15 +68,35 @@ button:disabled{opacity:.6}
   <div class="zeile">
     <label for="eingabe" class="unsichtbar">Deine Frage</label>
     <input id="eingabe" type="text" maxlength="1000" autocomplete="off" placeholder="Frage auf Deutsch oder Türkisch">
+    <button id="mikro" class="mikro" type="button" aria-label="Frage einsprechen" title="Frage einsprechen" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
     <button class="senden" type="submit" aria-label="Frage senden"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+  </div>
+  <div class="unterzeile">
+    <div id="sprachwahl" class="sprachwahl" hidden>
+      <span>Mikrofon:</span>
+      <button type="button" data-sprache="de-DE" aria-pressed="true">Deutsch</button>
+      <button type="button" data-sprache="tr-TR" aria-pressed="false">Türkçe</button>
+    </div>
+    <span id="sprachstatus" aria-live="polite"></span>
   </div>
 </form>
 <script>
 const verlauf = document.getElementById("verlauf");
 const formular = document.getElementById("formular");
 const eingabe = document.getElementById("eingabe");
-const knopf = formular.querySelector("button");
+const knopf = formular.querySelector("button.senden");
 const punkt = document.getElementById("punkt");
+const mikro = document.getElementById("mikro");
+const sprachwahl = document.getElementById("sprachwahl");
+const sprachstatus = document.getElementById("sprachstatus");
+
+// Die letzten drei Fragen und Antworten gehen mit, damit Rückfragen wie "nicht verstanden" funktionieren.
+// Sie liegen nur in dieser Seite; neu laden beginnt ein neues Gespräch.
+const gespraech = [];
+
+// Kleine Einstellungen im Browser merken (kann in privaten Fenstern fehlen)
+function merken(name, wert) { try { localStorage.setItem(name, wert); } catch (e) {} }
+function gemerkt(name) { try { return localStorage.getItem(name); } catch (e) { return null; } }
 
 // Grüner Punkt, solange der Server antwortet; grau, wenn keine Verbindung besteht
 function status(online) {
@@ -100,6 +131,8 @@ function antwortZeigen(frage, daten) {
     }
     box.appendChild(q);
   }
+  const knoepfe = el("div", "knoepfe");
+  if (window.speechSynthesis) knoepfe.appendChild(vorleseKnopf(daten.antwort, daten.sprache));
   const melden = el("button", "melden", "Antwort melden");
   melden.type = "button";
   melden.onclick = async () => {
@@ -113,7 +146,8 @@ function antwortZeigen(frage, daten) {
       melden.textContent = "Melden fehlgeschlagen, nochmal versuchen";
     }
   };
-  box.appendChild(melden);
+  knoepfe.appendChild(melden);
+  box.appendChild(knoepfe);
   verlauf.appendChild(box);
   box.scrollIntoView({behavior: "smooth", block: "start"});
 }
@@ -127,17 +161,165 @@ formular.addEventListener("submit", async (ev) => {
   const warten = el("div", "antwort", "Suche in den Quellen …");
   verlauf.appendChild(warten);
   try {
-    const r = await fetch("/api/frage", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({frage})});
+    const r = await fetch("/api/frage", {method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({frage, verlauf: gespraech})});
     const daten = await r.json();
     warten.remove();
     if (!r.ok) { verlauf.appendChild(el("div", "antwort fehler", daten.fehler || "Fehler")); }
-    else { antwortZeigen(frage, daten); }
+    else {
+      antwortZeigen(frage, daten);
+      if (daten.art === "antwort" || daten.art === "kein_treffer") {
+        // Gekürzt wie auf dem Server, damit die Anfrage auch nach langen Antworten klein bleibt
+        gespraech.push({frage: frage.slice(0, 1000), antwort: (daten.antwort || "").slice(0, 4000),
+          quellen: (daten.quellen || []).map(q => q.url), abschnitte: daten.abschnitte || []});
+        if (gespraech.length > 3) gespraech.shift();
+      }
+    }
   } catch (e) {
     warten.remove();
     status(false);
     verlauf.appendChild(el("div", "antwort fehler", "Keine Verbindung zum Server."));
   } finally { knopf.disabled = false; eingabe.focus(); }
 });
+
+// Vorlesen (Web Speech API). Bevorzugt Stimmen, die auf dem Gerät laufen. Gibt es für die Sprache nur
+// eine Onlinestimme, fragt die Seite einmal nach, weil der Antworttext dann an einen Onlinedienst geht.
+function stimmeFuer(sprache) {
+  const alle = window.speechSynthesis.getVoices();
+  const passend = alle.filter(v => v.lang.toLowerCase().startsWith(sprache));
+  const lokal = passend.find(v => v.localService);
+  if (lokal) return {stimme: lokal, hinweis: ""};
+  if (passend.length) {
+    if (gemerkt("seyda_online_stimme") === "ja" ||
+        confirm("Für diese Sprache hat das Gerät nur eine Onlinestimme. Zum Vorlesen geht der Antworttext dann an einen Onlinedienst. Weiter?")) {
+      merken("seyda_online_stimme", "ja");
+      return {stimme: passend[0], hinweis: ""};
+    }
+  }
+  // Sonst eine andere Stimme, die auf dem Gerät läuft (falsche Aussprache, aber nichts verlässt das Gerät)
+  const ersatz = alle.find(v => v.localService);
+  if (ersatz) return {stimme: ersatz, hinweis: "Für diese Sprache ist auf dem Gerät keine Stimme installiert, es liest eine andere Stimme."};
+  return null;
+}
+function stuecke(text) {
+  // Kurze Stücke, weil manche Browser lange Texte mittendrin abbrechen
+  const saetze = text.replace(/\s+/g, " ").match(/[^.!?:]+[.!?:]*\s*/g) || [text];
+  const teile = [];
+  let aktuell = "";
+  for (const satz of saetze) {
+    if (aktuell && (aktuell + satz).length > 220) { teile.push(aktuell); aktuell = ""; }
+    aktuell += satz;
+  }
+  if (aktuell.trim()) teile.push(aktuell);
+  return teile;
+}
+let aktiverKnopf = null;
+function vorleseKnopf(text, sprache) {
+  const knopf = el("button", "vorlesen");
+  knopf.type = "button";
+  const zuruecksetzen = (k) => { k.textContent = "Vorlesen"; k.setAttribute("aria-pressed", "false"); };
+  zuruecksetzen(knopf);
+  knopf.onclick = () => {
+    const tts = window.speechSynthesis;
+    const warAktiv = aktiverKnopf === knopf;
+    tts.cancel();
+    if (aktiverKnopf) zuruecksetzen(aktiverKnopf);
+    aktiverKnopf = null;
+    if (warAktiv) return;
+    const kurz = sprache === "tr" ? "tr" : "de";
+    const wahl = stimmeFuer(kurz);
+    if (!wahl) { sprachstatus.textContent = "Auf diesem Gerät ist keine Stimme zum Vorlesen verfügbar."; return; }
+    sprachstatus.textContent = wahl.hinweis;
+    const teile = stuecke(text);
+    teile.forEach((t, i) => {
+      const u = new SpeechSynthesisUtterance(t);
+      u.voice = wahl.stimme;
+      u.lang = wahl.stimme.lang;
+      if (i === teile.length - 1) u.onend = () => { if (aktiverKnopf === knopf) { zuruecksetzen(knopf); aktiverKnopf = null; } };
+      tts.speak(u);
+    });
+    aktiverKnopf = knopf;
+    knopf.textContent = "Stopp";
+    knopf.setAttribute("aria-pressed", "true");
+  };
+  return knopf;
+}
+if (window.speechSynthesis) window.speechSynthesis.getVoices();  // lädt die Stimmenliste vor
+
+// Spracheingabe (Web Speech API). Der Text landet im Eingabefeld und wird erst nach Prüfung gesendet.
+const Erkennung = window.SpeechRecognition || window.webkitSpeechRecognition;
+let erkennung = null;
+let mikroSprache = gemerkt("seyda_mikro") || ((navigator.language || "").toLowerCase().startsWith("tr") ? "tr-TR" : "de-DE");
+function sprachwahlZeigen() {
+  for (const b of sprachwahl.querySelectorAll("button")) b.setAttribute("aria-pressed", String(b.dataset.sprache === mikroSprache));
+}
+const FEHLER_MIKRO = {
+  "not-allowed": "Das Mikrofon ist nicht erlaubt. Bitte in der Adresszeile des Browsers erlauben.",
+  "service-not-allowed": "Der Browser erlaubt die Spracheingabe hier nicht.",
+  "no-speech": "Ich habe nichts gehört. Bitte noch einmal versuchen.",
+  "audio-capture": "Kein Mikrofon gefunden.",
+  "network": "Für die Spracheingabe braucht der Browser eine Internetverbindung.",
+  "language-not-supported": "Diese Sprache kennt die Spracheingabe in diesem Browser nicht.",
+};
+async function lokalMoeglich() {
+  try {
+    if (typeof Erkennung.available !== "function") return false;
+    return (await Erkennung.available({langs: [mikroSprache], processLocally: true})) === "available";
+  } catch (e) { return false; }
+}
+if (Erkennung) {
+  mikro.hidden = false;
+  sprachwahl.hidden = false;
+  sprachwahlZeigen();
+  sprachwahl.addEventListener("click", (ev) => {
+    const b = ev.target.closest("button");
+    if (!b) return;
+    mikroSprache = b.dataset.sprache;
+    merken("seyda_mikro", mikroSprache);
+    sprachwahlZeigen();
+  });
+  mikro.onclick = async () => {
+    if (erkennung) { erkennung.stop(); return; }
+    const lokal = await lokalMoeglich();
+    if (!lokal && gemerkt("seyda_mikro_ok") !== "ja") {
+      const ok = confirm("Für die Spracheingabe schickt dein Browser die Aufnahme zur Erkennung an einen Onlinedienst. " +
+        "SeydaAI selbst speichert keine Aufnahme. Weiter?");
+      if (!ok) return;
+      merken("seyda_mikro_ok", "ja");
+    }
+    const e = new Erkennung();
+    e.lang = mikroSprache;
+    e.interimResults = true;
+    e.continuous = false;
+    if (lokal) e.processLocally = true;
+    const vorher = eingabe.value.trim();
+    let gehoert = false;
+    e.onresult = (ev) => {
+      let text = "";
+      for (const r of ev.results) text += r[0].transcript;
+      gehoert = gehoert || !!text.trim();
+      eingabe.value = (vorher ? vorher + " " : "") + text.trim();
+    };
+    e.onerror = (ev) => { sprachstatus.textContent = FEHLER_MIKRO[ev.error] || "Die Spracheingabe hat nicht geklappt."; };
+    e.onend = () => {
+      erkennung = null;
+      mikro.classList.remove("an");
+      mikro.setAttribute("aria-label", "Frage einsprechen");
+      if (gehoert) sprachstatus.textContent = "Bitte den Text prüfen und dann senden.";
+      eingabe.focus();
+    };
+    try {
+      e.start();
+    } catch (fehler) {
+      sprachstatus.textContent = "Die Spracheingabe ließ sich nicht starten.";
+      return;
+    }
+    erkennung = e;
+    mikro.classList.add("an");
+    mikro.setAttribute("aria-label", "Aufnahme beenden");
+    sprachstatus.textContent = "Ich höre zu. Zum Beenden noch einmal auf das Mikrofon tippen.";
+  };
+}
 </script>
 </body>
 </html>

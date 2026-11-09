@@ -5,11 +5,15 @@ import re
 
 import anthropic
 
-from datenbank import suchen, verbrauch_buchen
+from datenbank import abschnitte_nach_nr, abschnitte_von, suchen, verbrauch_buchen
 
 SUCH_MODELL = "claude-haiku-5-5"
 ANTWORT_MODELL = "claude-sonnet-5-5"
-MIN_TREFFER = 1
+KANDIDATEN = 30          # so viele Abschnitte holt die Volltextsuche
+MAX_JE_SEITE = 3         # damit ein langer Artikel nicht alle Plätze belegt
+MAX_AUSWAHL = 6          # so viele wählt Haiku für die Antwort aus
+VORSCHAU_ZEICHEN = 700   # so viel Text je Kandidat sieht Haiku beim Auswählen
+MAX_VERLAUF = 3          # so viele frühere Fragen und Antworten gehen mit
 # Unbelegte Textstücke bleiben nur stehen, wenn sie keine Aussage sein können (höchstens so viele Wörter, kein Satzende)
 MAX_WOERTER_OHNE_BELEG = 2
 
@@ -62,7 +66,9 @@ Regeln:
 7. Aus Suchergebnissen, deren Titel mit [NUR ZUSAMMENFASSEN] beginnt, zitierst du nie wörtlich, sondern fasst nur zusammen.
 8. Antworte in der Sprache der Frage (Deutsch oder Türkisch). Fachbegriffe wie mekruh, tahrîmen mekruh oder müfsid lässt du stehen und erklärst sie kurz, statt sie zu übersetzen. Übersetze mekruh nie mit "verboten".
 9. Wirke nicht wie ein offizieller Dienst von Diyanet, TDV, Semerkand oder Serhendi.
-10. Halte die Antwort kurz: wenige Absätze, keine Einleitungsfloskeln."""
+10. Halte die Antwort kurz: wenige Absätze, keine Einleitungsfloskeln.
+11. Decken die Suchergebnisse nur einen Teil der Frage ab, beantworte diesen Teil und sag kurz, wozu du nichts gefunden hast.
+12. Bezieht sich die Frage auf deine vorige Antwort (nicht verstanden, einfacher erklären, mehr Details), erkläre dieselben Inhalte einfacher oder genauer, wieder nur aus den Suchergebnissen. Frühere Antworten im Gespräch sind kein Beleg."""
 
 HINWEIS_AUSGEBLENDET = {
     "de": "Hinweis: Teile der Antwort hatten keinen Beleg in den Quellen und wurden ausgeblendet.",
@@ -118,50 +124,170 @@ def sprache(frage: str) -> str:
 
 
 def krisen_antwort(frage: str) -> dict:
-    return {"antwort": KRISE_ANTWORT[sprache(frage)], "quellen": [], "teile": [], "art": "krise"}
+    lang = sprache(frage)
+    return {"antwort": KRISE_ANTWORT[lang], "quellen": [], "teile": [], "art": "krise", "sprache": lang}
 
 
-def suchbegriffe(client: anthropic.Anthropic, con, frage: str) -> list[str]:
-    """Haiku macht aus der Frage türkische Suchbegriffe für die Volltextsuche."""
+VERSTEHEN_SYSTEM = """Du bereitest eine Volltextsuche in türkischen islamischen Texten vor (Fetvas und Beschlüsse des Din İşleri Yüksek Kurulu von Diyanet, Artikel der TDV İslâm Ansiklopedisi, Texte von Semerkand). Du bekommst die neue Nachricht und, falls vorhanden, die letzten Fragen und Antworten des Gesprächs.
+
+frage: Die neue Nachricht als vollständige, eigenständige Frage in ihrer Sprache. Bezieht sie sich auf das Gespräch (zum Beispiel "nicht verstanden", "erklär einfacher", "und beim Fasten?", "bu cevap anlaşılmadı"), setze das Thema aus dem Gespräch ein.
+rueckfrage: true, wenn die Nachricht sich auf die vorige Antwort bezieht und ohne sie nicht verständlich wäre, sonst false.
+sprache: "tr", wenn die neue Nachricht türkisch ist (auch ohne türkische Sonderzeichen geschrieben), sonst "de".
+begriffe: 4 bis 10 türkische Suchbegriffe in korrekter türkischer Schreibweise mit ı, ş, ğ, ç, ö, ü, als Wortstamm oder Grundform ohne Endungen. Nimm Fachbegriffe und die Wendungen, unter denen die Quellen das Thema behandeln, auch Synonyme. Die Suche findet alle Wörter, die mit dem Begriff beginnen, darum lieber kurz: "şart" findet auch "şartı" und "şartları". Beispiel für "Was sind die Säulen des Islams?": İslâm şart, beş şart, kelime-i şehâdet, namaz, oruç, zekât, hac. Keine Füllwörter."""
+
+VERSTEHEN_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "frage": {"type": "string"},
+        "rueckfrage": {"type": "boolean"},
+        "sprache": {"type": "string", "enum": ["de", "tr"]},
+        "begriffe": {"type": "array", "items": {"type": "string"}},
+    },
+    "required": ["frage", "rueckfrage", "sprache", "begriffe"],
+    "additionalProperties": False,
+}
+
+AUSWAHL_SYSTEM = """Du bekommst eine Frage und nummerierte Textabschnitte aus islamischen Quellen. Wähle die Abschnitte aus, mit denen sich die Frage beantworten lässt, die besten zuerst, höchstens 6.
+Wähle einen Abschnitt nur, wenn er die Frage oder einen wesentlichen Teil davon direkt behandelt. Abschnitte, die das Thema nur nebenbei erwähnen, wählst du nicht. Hilft kein Abschnitt, gib eine leere Liste zurück."""
+
+AUSWAHL_SCHEMA = {
+    "type": "object",
+    "properties": {"nummern": {"type": "array", "items": {"type": "integer"}}},
+    "required": ["nummern"],
+    "additionalProperties": False,
+}
+
+
+def verlauf_pruefen(roh) -> list[dict]:
+    """Nimmt nur gültige, gekürzte Einträge aus dem vom Browser geschickten Verlauf (höchstens MAX_VERLAUF)."""
+    if not isinstance(roh, list):
+        return []
+    sauber = []
+    for e in roh[-10:]:
+        if not isinstance(e, dict):
+            continue
+        frage = str(e.get("frage", "")).strip()[:1000]
+        antwort = str(e.get("antwort", "")).strip()[:4000]
+        urls = e.get("quellen", [])
+        urls = [u[:500] for u in urls if isinstance(u, str) and u.startswith("https://")][:6] if isinstance(urls, list) else []
+        nummern = e.get("abschnitte", [])
+        nummern = [n for n in nummern if isinstance(n, int) and not isinstance(n, bool) and 0 < n < 2**62][:MAX_AUSWAHL] \
+            if isinstance(nummern, list) else []
+        if frage and antwort:
+            sauber.append({"frage": frage, "antwort": antwort, "quellen": urls, "abschnitte": nummern})
+    return sauber[-MAX_VERLAUF:]
+
+
+def _json_aus(antwort):
+    if antwort.stop_reason in ("refusal", "max_tokens"):
+        return None
+    text = "".join(b.text for b in antwort.content if b.type == "text").strip()
+    try:
+        daten = json.loads(text)
+    except json.JSONDecodeError:
+        return None
+    return daten if isinstance(daten, dict) else None
+
+
+def verstehen(client: anthropic.Anthropic, con, frage: str, verlauf: list[dict]) -> dict:
+    """Haiku macht aus der Nachricht (mit Gesprächsverlauf) eine eigenständige Frage und türkische Suchbegriffe."""
+    gespraech = "".join(
+        f"Frühere Frage: {e['frage']}\nFrühere Antwort: {e['antwort'][:1500]}\n\n" for e in verlauf
+    )
     antwort = client.messages.create(
         model=SUCH_MODELL,
-        max_tokens=2000,
-        output_config={"effort": "low"},
-        system=(
-            "Du bekommst eine Frage zu einem islamischen Thema auf Deutsch oder Türkisch. "
-            "Gib 3 bis 8 türkische Suchbegriffe zurück, mit denen man passende Abschnitte in türkischen Texten "
-            "von Diyanet, TDV und Semerkand findet (Fachbegriffe in türkischer Schreibweise, Grundformen). "
-            "Antworte nur mit einer JSON Liste von Strings, ohne weiteren Text."
-        ),
-        messages=[{"role": "user", "content": frage}],
+        max_tokens=4000,
+        output_config={"effort": "low", "format": {"type": "json_schema", "schema": VERSTEHEN_SCHEMA}},
+        system=VERSTEHEN_SYSTEM,
+        messages=[{"role": "user", "content": gespraech + "Neue Nachricht: " + frage}],
     )
-    verbrauch_buchen(con, SUCH_MODELL, antwort.usage.input_tokens, antwort.usage.output_tokens)
-    begriffe = []
-    if antwort.stop_reason != "refusal":
-        text = "".join(b.text for b in antwort.content if b.type == "text").strip()
-        treffer = re.search(r"\[.*\]", text, re.DOTALL)
-        try:
-            begriffe = json.loads(treffer.group(0)) if treffer else []
-        except json.JSONDecodeError:
-            begriffe = []
-    begriffe = [b for b in begriffe if isinstance(b, str) and b.strip()]
-    # Nur wenn Haiku nichts liefert, dienen die Wörter der Frage selbst als Suchbegriffe
-    return begriffe or re.findall(r"\w{4,}", frage)
+    verbrauch_buchen(con, SUCH_MODELL, antwort.usage.input_tokens, antwort.usage.output_tokens, "verstehen")
+    daten = _json_aus(antwort) or {}
+    begriffe = daten.get("begriffe") if isinstance(daten.get("begriffe"), list) else []
+    begriffe = [b.strip() for b in begriffe if isinstance(b, str) and b.strip()][:12]
+    eigenstaendig = daten.get("frage") if isinstance(daten.get("frage"), str) and daten.get("frage").strip() else frage
+    return {
+        "frage": eigenstaendig.strip()[:1500],
+        # Nur wenn Haiku nichts liefert, dienen die Wörter der Frage selbst als Suchbegriffe
+        "begriffe": begriffe or re.findall(r"\w{4,}", frage),
+        "rueckfrage": bool(daten.get("rueckfrage")) and bool(verlauf),
+        "sprache": daten.get("sprache") if daten.get("sprache") in ("de", "tr") else sprache(frage),
+    }
 
 
-def antworten(client: anthropic.Anthropic, con, frage: str) -> dict:
-    """Ergebnis: {"antwort", "quellen": [{"titel","url","quelle"}], "teile": [{"text","belege":[Index in quellen]}], "art"}.
+def kandidaten_suchen(con, begriffe: list[str], vorab: list[dict] = ()) -> list[dict]:
+    """Bis zu KANDIDATEN Abschnitte: erst die vorab gesetzten (bei Rückfragen), dann die Gesamtsuche,
+    dann die besten Treffer je Begriff, damit kein Begriff untergeht."""
+    gewaehlt, je_seite = {}, {}
 
-    art ist "antwort", "kein_treffer", "krise" oder "abgelehnt".
+    def dazu(t: dict, frei: bool = False) -> None:
+        if t["nr"] in gewaehlt or len(gewaehlt) >= KANDIDATEN:
+            return
+        if not frei and je_seite.get(t["url"], 0) >= MAX_JE_SEITE:
+            return
+        gewaehlt[t["nr"]] = t
+        je_seite[t["url"]] = je_seite.get(t["url"], 0) + 1
+
+    for t in vorab:
+        dazu(t, frei=True)
+    for t in suchen(con, begriffe, anzahl=40):
+        if len(gewaehlt) >= KANDIDATEN - 2 * min(len(begriffe), 6):
+            break
+        dazu(t)
+    for b in begriffe:
+        for t in suchen(con, [b], anzahl=4):
+            dazu(t)
+    return list(gewaehlt.values())
+
+
+def auswaehlen(client: anthropic.Anthropic, con, frage: str, kandidaten: list[dict]) -> list[dict]:
+    """Haiku liest kurze Vorschauen aller Kandidaten und wählt die passenden aus."""
+    liste = "\n\n".join(
+        f"[{i}] {t['quelle']}: {t['titel']}\n{t['text'][:VORSCHAU_ZEICHEN]}" for i, t in enumerate(kandidaten)
+    )
+    antwort = client.messages.create(
+        model=SUCH_MODELL,
+        max_tokens=4000,
+        output_config={"effort": "low", "format": {"type": "json_schema", "schema": AUSWAHL_SCHEMA}},
+        system=AUSWAHL_SYSTEM,
+        messages=[{"role": "user", "content": f"Frage: {frage}\n\nAbschnitte:\n\n{liste}"}],
+    )
+    verbrauch_buchen(con, SUCH_MODELL, antwort.usage.input_tokens, antwort.usage.output_tokens, "auswaehlen")
+    daten = _json_aus(antwort)
+    if daten is None:
+        # Auswahl gescheitert: dann die ersten Treffer der Volltextsuche nehmen
+        return kandidaten[:MAX_AUSWAHL]
+    nummern = []
+    for n in daten.get("nummern") if isinstance(daten.get("nummern"), list) else []:
+        if isinstance(n, int) and not isinstance(n, bool) and 0 <= n < len(kandidaten) and n not in nummern:
+            nummern.append(n)
+    return [kandidaten[n] for n in nummern[:MAX_AUSWAHL]]
+
+
+def antworten(client: anthropic.Anthropic, con, frage: str, verlauf: list[dict] = None) -> dict:
+    """Ergebnis: {"antwort", "quellen": [{"titel","url","quelle"}], "teile": [{"text","belege":[Index in quellen]}], "art", "sprache"}.
+
+    art ist "antwort", "kein_treffer", "krise" oder "abgelehnt". verlauf kommt aus verlauf_pruefen().
     """
-    lang = sprache(frage)
     if ist_krise(frage):
         return krisen_antwort(frage)
+    verlauf = verlauf or []
 
-    begriffe = suchbegriffe(client, con, frage)
-    treffer = suchen(con, begriffe, anzahl=6)
-    leer = {"antwort": KEIN_TREFFER[lang], "quellen": [], "teile": [], "art": "kein_treffer"}
-    if len(treffer) < MIN_TREFFER:
+    verstanden = verstehen(client, con, frage, verlauf)
+    lang = verstanden["sprache"]
+    leer = {"antwort": KEIN_TREFFER[lang], "quellen": [], "teile": [], "art": "kein_treffer", "sprache": lang}
+
+    # Bei einer Rückfrage gehören die zitierten Abschnitte der vorigen Antwort zu den Kandidaten
+    # (fehlen deren Nummern, die ersten Abschnitte jeder ihrer Quellen)
+    vorab = []
+    if verstanden["rueckfrage"]:
+        vorher = verlauf[-1]
+        vorab = abschnitte_nach_nr(con, vorher["abschnitte"]) or abschnitte_von(con, vorher["quellen"])
+    kandidaten = kandidaten_suchen(con, verstanden["begriffe"], vorab)
+    if not kandidaten:
+        return leer
+    treffer = auswaehlen(client, con, verstanden["frage"], kandidaten)
+    if not treffer:
         return leer
 
     ergebnisse = []
@@ -177,6 +303,16 @@ def antworten(client: anthropic.Anthropic, con, frage: str) -> dict:
             "citations": {"enabled": True},
         })
 
+    # Frühere Fragen und Antworten als normales Gespräch, die Suchergebnisse nur in der neuen Frage
+    nachrichten = []
+    for e in verlauf:
+        nachrichten.append({"role": "user", "content": e["frage"]})
+        nachrichten.append({"role": "assistant", "content": e["antwort"]})
+    frage_text = "Frage: " + frage
+    if verstanden["frage"] != frage:
+        frage_text += "\n(Gemeint ist: " + verstanden["frage"] + ")"
+    nachrichten.append({"role": "user", "content": ergebnisse + [{"type": "text", "text": frage_text}]})
+
     nachricht = client.beta.messages.create(
         model=ANTWORT_MODELL,
         max_tokens=16000,
@@ -184,14 +320,14 @@ def antworten(client: anthropic.Anthropic, con, frage: str) -> dict:
         betas=["server-side-fallback-2026-07-01"],
         fallbacks="default",
         system=SYSTEM,
-        messages=[{"role": "user", "content": ergebnisse + [{"type": "text", "text": "Frage: " + frage}]}],
+        messages=nachrichten,
     )
-    verbrauch_buchen(con, nachricht.model or ANTWORT_MODELL, nachricht.usage.input_tokens, nachricht.usage.output_tokens)
+    verbrauch_buchen(con, nachricht.model or ANTWORT_MODELL, nachricht.usage.input_tokens, nachricht.usage.output_tokens, "antworten")
 
     if nachricht.stop_reason == "refusal":
         return {**leer, "art": "abgelehnt"}
 
-    quellen, index_von_url, teile, ausgeblendet = [], {}, [], False
+    quellen, index_von_url, teile, ausgeblendet, zitiert = [], {}, [], False, []
     vorher_belegt = False
     for block in nachricht.content:
         if block.type != "text":
@@ -203,6 +339,8 @@ def antworten(client: anthropic.Anthropic, con, frage: str) -> dict:
             if not 0 <= c.search_result_index < len(treffer):
                 continue
             t = treffer[c.search_result_index]
+            if t["nr"] not in zitiert:
+                zitiert.append(t["nr"])
             if t["url"] not in index_von_url:
                 index_von_url[t["url"]] = len(quellen)
                 quellen.append({"titel": t["titel"] or t["url"], "url": t["url"], "quelle": t["quelle"]})
@@ -242,4 +380,5 @@ def antworten(client: anthropic.Anthropic, con, frage: str) -> dict:
     antwort_text += "\n\n" + VERWEIS[lang]
     if hinweise:
         antwort_text += "\n\n" + "\n".join(hinweise)
-    return {"antwort": antwort_text, "quellen": quellen, "teile": teile, "hinweise": hinweise, "art": "antwort"}
+    return {"antwort": antwort_text, "quellen": quellen, "teile": teile, "hinweise": hinweise, "art": "antwort",
+            "sprache": lang, "abschnitte": zitiert}

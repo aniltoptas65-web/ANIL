@@ -18,16 +18,17 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import anthropic
 
 from datenbank import aktive_zugaenge, alte_zaehler_loeschen, frage_zaehlen, fragen_heute, fragen_heute_person, verbinden, zugang_pruefen
-from seyda import antworten, ist_krise, krisen_antwort
+from seyda import antworten, ist_krise, krisen_antwort, verlauf_pruefen
 
 PORT = int(os.environ.get("SEYDA_PORT", "8000"))
 PASSWORT = os.environ.get("SEYDA_PASSWORT", "")
 MAX_FRAGEN_PRO_TAG = int(os.environ.get("SEYDA_MAX_FRAGEN", "50"))
 MAX_FRAGE_ZEICHEN = 1000
-MAX_KOERPER = 20000
+MAX_KOERPER = 60000  # Frage plus bis zu drei frühere Fragen und Antworten
 WEB = os.path.join(os.path.dirname(__file__), "web")
 SCHRIFTEN = os.path.join(WEB, "schriften")
 SCHRIFT_DATEIEN = {n for n in os.listdir(SCHRIFTEN) if n.endswith(".woff2")} if os.path.isdir(SCHRIFTEN) else set()
+LOGO = os.path.join(WEB, "reyhani_logo.png")
 
 con = verbinden()
 sperre = threading.Lock()  # eine Anfrage nach der anderen, die SQLite Verbindung wird geteilt
@@ -107,6 +108,9 @@ class Handler(BaseHTTPRequestHandler):
         if self.path in ("/", "/index.html"):
             with open(os.path.join(WEB, "index.html"), "rb") as f:
                 return self._senden(200, f.read(), "text/html; charset=utf-8")
+        if self.path == "/reyhani_logo.png" and os.path.isfile(LOGO):
+            with open(LOGO, "rb") as f:
+                return self._senden(200, f.read(), "image/png", "private, max-age=604800")
         if self.path.startswith("/schriften/"):
             datei = self.path[len("/schriften/"):]
             # Nur die Schriftdateien aus der festen Liste, keine anderen Pfade
@@ -156,7 +160,7 @@ class Handler(BaseHTTPRequestHandler):
                 # Gezählt wird beim Absenden, auch wenn das Sprachmodell danach einen Fehler meldet
                 frage_zaehlen(con, self.wer["name"])
             try:
-                return self._json(200, antworten(client(), con, frage))
+                return self._json(200, antworten(client(), con, frage, verlauf_pruefen(daten.get("verlauf"))))
             except anthropic.AuthenticationError:
                 return self._json(502, {"fehler": "Der API Schlüssel fehlt oder ist ungültig (ANTHROPIC_API_KEY)."})
             except anthropic.RateLimitError:

@@ -1,12 +1,12 @@
 ﻿# SeydaAI starten (Windows). Wird von SeydaAI_starten.bat aufgerufen.
 #
 # Beim ersten Mal: Python prüfen oder installieren, Pakete einrichten, API Schlüssel und Passwort abfragen,
-# Quellen einlesen. Danach: Server starten und Browser öffnen.
+# Quellen einlesen, auf Wunsch das Prüfset. Danach: Server starten und Browser öffnen.
 #
 # Die Python Umgebung liegt unter %LOCALAPPDATA%\SeydaAI\venv, weil Windows sehr lange Pfade sonst nicht verträgt.
 # Der API Schlüssel landet nie im Projektordner. Auf Wunsch wird er mit dem Windows eigenen Schutz (DPAPI)
 # verschlüsselt unter %LOCALAPPDATA%\SeydaAI gespeichert; nur dein Windows Benutzerkonto kann ihn wieder lesen.
-# Als Umgebungsvariable steht er nur kurz für die Schlüsselprüfung und den Start des SeydaAI Servers bereit und wird danach
+# Als Umgebungsvariable steht er nur kurz für die Schlüsselprüfung, das Prüfset und den Start des SeydaAI Servers bereit und wird danach
 # wieder entfernt; der Browser und andere später gestartete Programme bekommen ihn nicht.
 
 $ErrorActionPreference = "Continue"
@@ -164,7 +164,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 Write-Host "Pakete sind bereit."
 
-# 2. Schlüssel und Passwort. Sie bleiben in Variablen und gehen nur an die Schlüsselprüfung und den Server.
+# 2. Schlüssel und Passwort. Sie bleiben in Variablen. Der Schlüssel geht nur an Schlüsselprüfung, Prüfset und Server, das Passwort nur an den Server.
 Abschnitt "Zugang"
 $schluessel = GeheimGespeichert $SchluesselDatei "Ein API Schlüssel"
 while ($true) {
@@ -206,13 +206,14 @@ if ($LASTEXITCODE -ne 0) { Stopp "Die Datenbank ließ sich nicht öffnen. Die Me
 if ($stand) {
     Write-Host "Bereits eingelesen:"
     $stand | ForEach-Object { Write-Host "  $_" }
-    $wahl = Read-Host "Neu einlesen? d = nur Diyanet, a = alle Quellen, Enter = nein, gleich starten"
+    Write-Host "Seiten, die schon nach den aktuellen Regeln gespeichert sind, werden übersprungen. Ein neuer Lauf holt nur, was noch fehlt."
+    $wahl = Read-Host "Einlesen (fortsetzen)? d = nur Diyanet, a = alle Quellen, Enter = nein, gleich starten"
 } else {
     Write-Host "Noch keine Quellen eingelesen. Das Skript liest langsam und mit Pause, damit die Seiten nicht belastet werden."
-    $wahl = Read-Host "Jetzt einlesen? d = nur Diyanet (etwa 10 Minuten), a = alle Quellen (etwa 30 Minuten), n = nicht jetzt"
+    $wahl = Read-Host "Jetzt einlesen? d = nur Diyanet (bis etwa 75 Minuten), a = alle Quellen (bis etwa 2 Stunden), n = nicht jetzt"
 }
 if ($wahl -match '^[dDaA]') {
-    Write-Host "Abbrechen mit Strg+C. Bereits eingelesene Seiten bleiben gespeichert; danach SeydaAI_starten.bat neu starten."
+    Write-Host "Abbrechen mit Strg+C. Bereits eingelesene Seiten bleiben gespeichert; beim nächsten Start geht es dort weiter."
     if ($wahl -match '^[dD]') { & $venvPy einlesen.py diyanet } else { & $venvPy einlesen.py }
     if ($LASTEXITCODE -ne 0) { Write-Host "Beim Einlesen gab es einen Fehler, die Meldung steht oben. Der Server startet trotzdem." -ForegroundColor Yellow }
     Write-Host ""
@@ -220,7 +221,18 @@ if ($wahl -match '^[dDaA]') {
     & $venvPy startpruefung.py quellen | ForEach-Object { Write-Host "  $_" }
 }
 
-# 4. Server starten und Browser öffnen. Nur der Server bekommt Schlüssel und Passwort.
+# 4. Prüfset (freiwillig): 20 Grundfragen und eine Rückfrage, Bericht als Datei
+Abschnitt "Prüfset"
+$wahl = Read-Host "Prüfset mit 20 Grundfragen laufen lassen? p = ja (dauert einige Minuten, kostet geschätzt 20 bis 60 US Cent, zählt 21 Fragen zum Tageslimit), Enter = nein"
+if ($wahl -match '^[pP]') {
+    $env:ANTHROPIC_API_KEY = $schluessel
+    & $venvPy pruefset.py
+    $ergebnis = $LASTEXITCODE
+    Remove-Item Env:ANTHROPIC_API_KEY -ErrorAction SilentlyContinue
+    if ($ergebnis -ne 0) { Write-Host "Das Prüfset lief nicht durch, die Meldung steht oben. Der Server startet trotzdem." -ForegroundColor Yellow }
+}
+
+# 5. Server starten und Browser öffnen. Nur der Server bekommt Schlüssel und Passwort.
 Abschnitt "SeydaAI starten"
 if (PortBelegt $Port) {
     Stopp "Unter $Adresse antwortet inzwischen ein anderes Programm. Bitte das andere Fenster schließen und neu starten."

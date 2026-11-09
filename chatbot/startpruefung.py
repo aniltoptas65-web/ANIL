@@ -11,8 +11,12 @@ import sys
 def quellen() -> int:
     from datenbank import verbinden
 
-    for quelle, anzahl in verbinden().execute("SELECT quelle, COUNT(*) FROM seiten GROUP BY quelle ORDER BY quelle"):
+    con = verbinden()
+    for quelle, anzahl in con.execute("SELECT quelle, COUNT(*) FROM seiten GROUP BY quelle ORDER BY quelle"):
         print(f"{quelle}: {anzahl} {'Seite' if anzahl == 1 else 'Seiten'}")
+    alt = con.execute("SELECT COUNT(*) FROM seiten WHERE regel IS NULL").fetchone()[0]
+    if alt:
+        print(f"Achtung: {alt} Seiten stammen aus dem alten Einlesen (auch Menü und Firmenseiten). Bitte a wählen, dann werden sie ersetzt.")
     return 0
 
 
