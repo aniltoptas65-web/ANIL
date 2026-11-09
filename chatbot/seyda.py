@@ -25,7 +25,7 @@ KRISE_WOERTER = [
     "will sterben", "sterben will", "möchte sterben", "tot sein", "mich töten",
     "ritze mich", "mich ritzen", "mich verletzen", "selbstverletz",
     "gewalt", "vergewalt", "missbraucht", "sexuell belästigt", "schlägt mich", "schlaegt mich", "schlägt uns", "schlägt meine", "hat mich geschlagen",
-    "werde geschlagen", "geschlagen worden", "bedroht mich",
+    "werde geschlagen", "wurde geschlagen", "wurde verprügelt", "geschlagen worden", "bedroht mich",
     "intihar", "kendimi öldür", "kendimi as", "ölmek istiyorum", "ölmek ister", "yaşamak istemiyorum", "canıma kıy",
     "kendime zarar", "şiddet", "dövüyor", "beni dövü", "taciz", "tecavüz", "istismar",
 ]
@@ -212,8 +212,13 @@ def antworten(client: anthropic.Anthropic, con, frage: str) -> dict:
             teile.append({"text": block.text, "belege": belege})
             vorher_belegt = True
         elif ist_uebersetzung(block.text) and vorher_belegt:
-            # Gekennzeichnete Übersetzung des unmittelbar davor belegten Zitats
-            teile.append({"text": block.text, "belege": []})
+            # Gekennzeichnete Übersetzung des unmittelbar davor belegten Zitats, nur ihre eigene Zeile
+            vorne = block.text[: len(block.text) - len(block.text.lstrip())]
+            zeile, _, rest = block.text.lstrip().partition("\n")
+            teile.append({"text": vorne + zeile + "\n", "belege": []})
+            if rest.strip():
+                ausgeblendet = True
+                vorher_belegt = False
         elif ist_ueberleitung(block.text):
             teile.append({"text": block.text, "belege": []})
         else:

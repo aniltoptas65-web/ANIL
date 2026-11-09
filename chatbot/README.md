@@ -40,7 +40,7 @@ Den Schlüssel nie in eine Datei im Repo schreiben.
 
 ## Quellen einlesen
 
-Zuerst in `quellen.json` die Startadressen im Browser prüfen. `semerkand.com.tr` ist laut eigener Startseite die Seite der Semerkand Medya Grubu (Stand Blindspot Prüfung, 9. November 2026); falls die Artikel auf einer anderen Adresse liegen, dort eintragen. Für Serhendi ist noch keine Adresse eingetragen, weil eine kurze Websuche keine offizielle Seite ergeben hat. Dann:
+Zuerst in `quellen.json` die Startadressen im Browser prüfen. `semerkand.com.tr` ist laut ihrer Startseite die Seite der Semerkand Medya Grubu (nachgelesen am 9. November 2026); falls die Artikel auf einer anderen Adresse liegen, dort eintragen. Für Serhendi ist noch keine Adresse eingetragen, weil eine kurze Websuche keine offizielle Seite ergeben hat. Dann:
 
 ```
 python einlesen.py
