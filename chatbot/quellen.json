@@ -1,0 +1,38 @@
+{
+  "_hinweis": "Startseiten je Quelle. Das Einleseskript folgt nur Links innerhalb von 'erlaubt'. Adressen vor dem ersten Lauf im Browser prüfen und bei Bedarf anpassen.",
+  "quellen": [
+    {
+      "name": "Din İşleri Yüksek Kurulu",
+      "kurz": "diyanet",
+      "start": ["https://kurul.diyanet.gov.tr/"],
+      "erlaubt": ["https://kurul.diyanet.gov.tr/"],
+      "nur_zusammenfassen": false,
+      "max_seiten": 200
+    },
+    {
+      "name": "TDV İslâm Ansiklopedisi",
+      "kurz": "tdv_ia",
+      "start": ["https://islamansiklopedisi.org.tr/"],
+      "erlaubt": ["https://islamansiklopedisi.org.tr/"],
+      "nur_zusammenfassen": true,
+      "max_seiten": 200
+    },
+    {
+      "name": "Semerkand",
+      "kurz": "semerkand",
+      "start": ["https://www.semerkand.com.tr/"],
+      "erlaubt": ["https://www.semerkand.com.tr/"],
+      "nur_zusammenfassen": false,
+      "max_seiten": 200
+    },
+    {
+      "name": "Serhendi",
+      "kurz": "serhendi",
+      "start": [],
+      "erlaubt": [],
+      "nur_zusammenfassen": false,
+      "max_seiten": 200,
+      "_offen": "Adresse der öffentlichen Serhendi Seite hier eintragen"
+    }
+  ]
+}

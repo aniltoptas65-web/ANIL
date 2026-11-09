@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SeydaAI</title>
+<!-- Vorläufige Oberfläche im Stil von Entwurf 1. Wird nach Anils Designwahl ersetzt. -->
+<style>
+:root{--bordeaux:#8B1014;--oliv:#3D5C1E;--creme:#F8F4EE;--sand:#EBE2D4;--rand:#DCCFBC;--text:#2A2320;--leise:#5C5248}
+*{box-sizing:border-box}
+body{margin:0;background:var(--creme);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column;min-height:100vh}
+header{background:var(--bordeaux);color:#fff;padding:18px 20px 14px}
+header h1{margin:0;font-family:Georgia,serif;font-size:28px}
+header p{margin:4px 0 0;font-size:13px;color:#F3E3E3}
+.hinweis{background:var(--sand);padding:10px 20px;font-size:13px;color:#4A3F35}
+main{flex:1;width:100%;max-width:720px;margin:0 auto;padding:20px 16px;display:flex;flex-direction:column;gap:16px}
+.frage{align-self:flex-end;max-width:85%;background:#fff;border:1px solid var(--rand);border-radius:16px 16px 4px 16px;padding:12px 14px;white-space:pre-wrap}
+.antwort{background:#fff;border:1px solid var(--rand);border-radius:16px 16px 16px 4px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.antwort .ki{font-size:12px;color:var(--leise)}
+.antwort .text{white-space:pre-wrap;line-height:1.55}
+.quellen{border-top:1px solid var(--sand);padding-top:10px;display:flex;flex-direction:column;gap:6px}
+.quellen span{font-size:12px;font-weight:600;color:var(--oliv);letter-spacing:.4px}
+.quellen a{color:var(--bordeaux)}
+.melden{align-self:flex-end;min-height:44px;padding:0 14px;border:1px solid #C9B9A3;background:transparent;border-radius:22px;font:inherit;font-size:14px;color:#4A3F35;cursor:pointer}
+.fehler{color:var(--bordeaux)}
+form{position:sticky;bottom:0;background:var(--creme);border-top:1px solid var(--rand);padding:12px 16px 18px}
+.zeile{max-width:720px;margin:0 auto;display:flex;gap:8px}
+input{flex:1;min-height:46px;border:1px solid #C9B9A3;border-radius:23px;padding:0 16px;font:inherit;font-size:16px;background:#fff}
+button.senden{min-width:46px;height:46px;border:none;border-radius:23px;background:var(--bordeaux);color:#fff;font:inherit;padding:0 16px;cursor:pointer}
+button:disabled{opacity:.6}
+.unsichtbar{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<header>
+  <h1>SeydaAI</h1>
+  <p>Antworten aus Diyanet, TDV und Semerkand</p>
+</header>
+<div class="hinweis">Hier antwortet eine KI. Sie kann sich irren und ersetzt keinen Gelehrten. Interner Test.</div>
+<main id="verlauf" aria-live="polite"></main>
+<form id="formular">
+  <div class="zeile">
+    <label for="eingabe" class="unsichtbar">Deine Frage</label>
+    <input id="eingabe" type="text" maxlength="1000" autocomplete="off" placeholder="Stell deine Frage auf Deutsch oder Türkisch">
+    <button class="senden" type="submit" aria-label="Frage senden">Fragen</button>
+  </div>
+</form>
+<script>
+const verlauf = document.getElementById("verlauf");
+const formular = document.getElementById("formular");
+const eingabe = document.getElementById("eingabe");
+const knopf = formular.querySelector("button");
+
+function el(tag, klasse, text) {
+  const e = document.createElement(tag);
+  if (klasse) e.className = klasse;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+
+function antwortZeigen(frage, daten) {
+  const box = el("article", "antwort");
+  box.appendChild(el("div", "ki", "KI Antwort"));
+  box.appendChild(el("div", "text", daten.antwort));
+  if (daten.quellen && daten.quellen.length) {
+    const q = el("div", "quellen");
+    q.appendChild(el("span", "", "QUELLEN"));
+    for (const s of daten.quellen) {
+      const a = el("a", "", s.quelle + ": " + s.titel);
+      a.href = s.url; a.target = "_blank"; a.rel = "noopener";
+      q.appendChild(a);
+    }
+    box.appendChild(q);
+  }
+  const melden = el("button", "melden", "Antwort melden");
+  melden.type = "button";
+  melden.onclick = async () => {
+    const notiz = prompt("Was stimmt an der Antwort nicht? (optional)") || "";
+    try {
+      const r = await fetch("/api/melden", {method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({frage, antwort: daten.antwort, quellen: daten.quellen, notiz})});
+      if (!r.ok) throw new Error();
+      melden.textContent = "Gemeldet, danke"; melden.disabled = true;
+    } catch (e) {
+      melden.textContent = "Melden fehlgeschlagen, nochmal versuchen";
+    }
+  };
+  box.appendChild(melden);
+  verlauf.appendChild(box);
+  box.scrollIntoView({behavior: "smooth", block: "start"});
+}
+
+formular.addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const frage = eingabe.value.trim();
+  if (!frage) return;
+  verlauf.appendChild(el("div", "frage", frage));
+  eingabe.value = ""; knopf.disabled = true;
+  const warten = el("div", "antwort", "Suche in den Quellen …");
+  verlauf.appendChild(warten);
+  try {
+    const r = await fetch("/api/frage", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({frage})});
+    const daten = await r.json();
+    warten.remove();
+    if (!r.ok) { verlauf.appendChild(el("div", "antwort fehler", daten.fehler || "Fehler")); }
+    else { antwortZeigen(frage, daten); }
+  } catch (e) {
+    warten.remove();
+    verlauf.appendChild(el("div", "antwort fehler", "Keine Verbindung zum Server."));
+  } finally { knopf.disabled = false; eingabe.focus(); }
+});
+</script>
+</body>
+</html>
