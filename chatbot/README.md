@@ -56,9 +56,28 @@ python server.py
 
 Dann im Browser `http://127.0.0.1:8000` öffnen. Benutzername ist egal, Passwort wie gesetzt. Der Server ist nur auf deinem Rechner erreichbar.
 
+## Zugänge für die Testgruppe
+
+Jede Person bekommt einen eigenen Namen, einen zufälligen Code und ein eigenes Tageslimit. So lässt sich einzeln sperren, wer nicht mehr testen soll, und niemand verbraucht das persönliche Kontingent der anderen.
+
+```
+python zugang.py neu "Ayse K" 10
+python zugang.py liste
+python zugang.py sperren "Ayse K"
+python zugang.py loeschen "Ayse K"
+```
+
+`neu` zeigt den Code genau einmal an. Gespeichert wird nur ein Prüfwert, der Code selbst lässt sich später nicht mehr anzeigen. Wer seinen Code verliert, bekommt mit `loeschen` und danach `neu` einen neuen. Beim Anmelden ist der Benutzername der Name aus `zugang.py` und das Passwort der Code. Der Name muss genau so eingegeben werden wie angelegt, auch Groß und Kleinschreibung und Leerzeichen zählen. Als Namen reichen Vornamen oder Kürzel, am besten ohne türkische Sonderzeichen (Ayse statt Ayşe), weil nicht jeder Browser sie beim Anmelden gleich überträgt. `loeschen` setzt auch den heutigen Zähler der Person zurück.
+
+Gezählt wird jede Frage, die an ein Sprachmodell geht, auch wenn danach ein Fehler kommt. Fragen mit Krisenwörtern zählen nicht. Zusätzlich gilt `SEYDA_MAX_FRAGEN` als gemeinsame Obergrenze für alle zusammen, deine eigenen Fragen eingeschlossen. Ist sie erreicht, ist für alle Schluss, auch wenn jemand sein persönliches Limit noch nicht ausgeschöpft hat. Für die Testgruppe also passend hochsetzen, zum Beispiel 10 Personen mal 10 Fragen gleich 100.
+
+Mit dem Passwort aus `SEYDA_PASSWORT` meldest du dich weiterhin selbst an, für dich gilt nur die gemeinsame Obergrenze. Ohne `SEYDA_PASSWORT` startet der Server nur, wenn mindestens ein aktiver, also nicht gesperrter Zugang angelegt ist.
+
+Solange der Server nur auf deinem Rechner läuft, kommen die Kollegen noch nicht heran. Dafür braucht es den kleinen gemieteten Server aus dem Plan (Stufe B). Vor diesem Schritt sind noch zwei Dinge nötig: HTTPS, weil die Anmeldung Name und Code sonst lesbar durchs Netz schickt, und die Prüfung der Herkunft in `server.py`, die im Moment nur Anfragen von 127.0.0.1 und localhost zulässt.
+
 ## Was gespeichert wird
 
-Fragen und Antworten werden nicht gespeichert. Ausnahme: Drückst du „Antwort melden“, landen diese eine Frage, die Antwort, die Quellen und deine Notiz in der Tabelle `meldungen` in `seyda.db`. Für die Kostenkontrolle zählt die Tabelle `verbrauch` pro Tag nur Modell und Tokens, ohne Text.
+Fragen und Antworten werden nicht gespeichert. Ausnahme: Drückst du „Antwort melden“, landen diese eine Frage, die Antwort, die Quellen und deine Notiz in der Tabelle `meldungen` in `seyda.db`. Für die Kostenkontrolle zählt die Tabelle `verbrauch` pro Tag nur Modell und Tokens, ohne Text. Für die Zugänge stehen in `zugaenge` Name, Salz und Prüfwert des Codes, Tageslimit, ob der Zugang aktiv ist, und wann er angelegt wurde. In `fragen_pro_person` stehen nur Name, Tag und Anzahl der Fragen, ohne Inhalt. Zählerstände von früheren Tagen löscht der Server bei der nächsten Frage, es entsteht also kein Verlauf.
 
 Höchstens 50 Fragen pro Tag (änderbar über `SEYDA_MAX_FRAGEN`). Das Limit zählt jede Frage, die an ein Sprachmodell geht.
 
@@ -72,4 +91,4 @@ Preise pro Million Tokens laut Anthropic: Sonnet 5.5 2 USD Eingabe und 10 USD Au
 
 ## Grenzen dieses Prototyps
 
-Die Volltextsuche findet nur Abschnitte, in denen die Suchbegriffe vorkommen. Ob das reicht, zeigt das Prüfset mit deinen 50 Fragen. Die Oberfläche in `web/index.html` folgt Entwurf 1 „Klassisch“ mit grünem Online Punkt; der Punkt wird grau, wenn der Server nicht antwortet. Die Schriften Cormorant Garamond und Source Sans 3 lädt die Seite bewusst nicht von Google; ohne sie zeigt der Browser Georgia und eine Systemschrift. Vor der Testgruppe binde ich sie lokal ein. Aus der TDV İslâm Ansiklopedisi zitiert der Bot nicht wörtlich, sondern fasst nur zusammen.
+Die Volltextsuche findet nur Abschnitte, in denen die Suchbegriffe vorkommen. Ob das reicht, zeigt das Prüfset mit deinen 50 Fragen. Die Oberfläche in `web/index.html` folgt Entwurf 1 „Klassisch“ mit grünem Online Punkt; der Punkt wird grau, wenn der Server nicht antwortet. Die Schriften Cormorant Garamond und Source Sans 3 liegen in `web/schriften` (SIL Open Font License, Lizenztexte daneben, Dateien aus den Fontsource Paketen 5.3) und kommen vom eigenen Server, nicht von Google. Enthalten sind die Zeichensätze Latin und Latin Extended, also auch ğ, ş, ı und İ. Aus der TDV İslâm Ansiklopedisi zitiert der Bot nicht wörtlich, sondern fasst nur zusammen.

@@ -1,7 +1,9 @@
 """Kleiner Webserver für den internen Test von SeydaAI.
 
 Start:  python server.py
-Dann im Browser http://127.0.0.1:8000 öffnen. Benutzername beliebig, Passwort aus SEYDA_PASSWORT.
+Dann im Browser http://127.0.0.1:8000 öffnen.
+Anmelden entweder mit beliebigem Benutzernamen und dem Passwort aus SEYDA_PASSWORT (Anil, nur das
+gemeinsame Tageslimit gilt) oder mit Name und Code eines Zugangs aus zugang.py (eigenes Tageslimit).
 """
 
 import base64
@@ -15,7 +17,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import anthropic
 
-from datenbank import fragen_heute, verbinden
+from datenbank import aktive_zugaenge, frage_zaehlen, fragen_heute, fragen_heute_person, verbinden, zugang_pruefen
 from seyda import antworten, ist_krise, krisen_antwort
 
 PORT = int(os.environ.get("SEYDA_PORT", "8000"))
@@ -24,9 +26,14 @@ MAX_FRAGEN_PRO_TAG = int(os.environ.get("SEYDA_MAX_FRAGEN", "50"))
 MAX_FRAGE_ZEICHEN = 1000
 MAX_KOERPER = 20000
 WEB = os.path.join(os.path.dirname(__file__), "web")
+SCHRIFTEN = os.path.join(WEB, "schriften")
+SCHRIFT_DATEIEN = {n for n in os.listdir(SCHRIFTEN) if n.endswith(".woff2")} if os.path.isdir(SCHRIFTEN) else set()
 
 con = verbinden()
 sperre = threading.Lock()  # eine Anfrage nach der anderen, die SQLite Verbindung wird geteilt
+# Eigene Verbindung für die Anmeldung, damit der Online Punkt nicht warten muss, während eine Antwort entsteht
+anmelde_con = verbinden()
+anmelde_sperre = threading.Lock()
 _client = None
 
 
@@ -39,15 +46,26 @@ def client() -> anthropic.Anthropic:
 
 
 class Handler(BaseHTTPRequestHandler):
+    wer = None  # nach erfolgreicher Anmeldung: {"name": ..., "tageslimit": ...}
+
     def _angemeldet(self) -> bool:
         kopf = self.headers.get("Authorization", "")
-        if not kopf.startswith("Basic ") or not PASSWORT:
+        if not kopf.startswith("Basic "):
             return False
         try:
-            _, _, pw = base64.b64decode(kopf[6:]).decode("utf-8").partition(":")
+            name, _, pw = base64.b64decode(kopf[6:], validate=True).decode("utf-8").partition(":")
         except Exception:
             return False
-        return hmac.compare_digest(pw.encode("utf-8"), PASSWORT.encode("utf-8"))
+        if name and pw:
+            with anmelde_sperre:
+                zugang = zugang_pruefen(anmelde_con, name, pw)
+            if zugang:
+                self.wer = zugang
+                return True
+        if PASSWORT and hmac.compare_digest(pw.encode("utf-8"), PASSWORT.encode("utf-8")):
+            self.wer = {"name": "admin", "tageslimit": None}
+            return True
+        return False
 
     def _gleiche_herkunft(self) -> bool:
         """Schutz davor, dass eine fremde Webseite im Hintergrund Fragen stellt."""
@@ -56,11 +74,11 @@ class Handler(BaseHTTPRequestHandler):
             return False
         return self.headers.get("Content-Type", "").startswith("application/json")
 
-    def _senden(self, code: int, inhalt: bytes, typ: str) -> None:
+    def _senden(self, code: int, inhalt: bytes, typ: str, cache: str = "no-store") -> None:
         self.send_response(code)
         self.send_header("Content-Type", typ)
         self.send_header("Content-Length", str(len(inhalt)))
-        self.send_header("Cache-Control", "no-store")
+        self.send_header("Cache-Control", cache)
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("X-Frame-Options", "DENY")
         self.end_headers()
@@ -83,6 +101,12 @@ class Handler(BaseHTTPRequestHandler):
         if self.path in ("/", "/index.html"):
             with open(os.path.join(WEB, "index.html"), "rb") as f:
                 return self._senden(200, f.read(), "text/html; charset=utf-8")
+        if self.path.startswith("/schriften/"):
+            datei = self.path[len("/schriften/"):]
+            # Nur die Schriftdateien aus der festen Liste, keine anderen Pfade
+            if datei in SCHRIFT_DATEIEN:
+                with open(os.path.join(SCHRIFTEN, datei), "rb") as f:
+                    return self._senden(200, f.read(), "font/woff2", "private, max-age=604800")
         self._senden(404, b"Nicht gefunden", "text/plain; charset=utf-8")
 
     def do_POST(self):
@@ -119,6 +143,12 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json(200, krisen_antwort(frage))
             if fragen_heute(con) >= MAX_FRAGEN_PRO_TAG:
                 return self._json(429, {"fehler": "Das Tageslimit an Fragen ist erreicht. Morgen geht es weiter."})
+            limit = self.wer["tageslimit"]
+            if limit is not None:
+                if fragen_heute_person(con, self.wer["name"]) >= limit:
+                    return self._json(429, {"fehler": f"Für heute ist dein Tageslimit erreicht ({limit} pro Tag). Morgen geht es weiter."})
+                # Gezählt wird beim Absenden, auch wenn das Sprachmodell danach einen Fehler meldet
+                frage_zaehlen(con, self.wer["name"])
             try:
                 return self._json(200, antworten(client(), con, frage))
             except anthropic.AuthenticationError:
@@ -157,9 +187,16 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    if not PASSWORT:
-        raise SystemExit("Bitte zuerst ein Passwort setzen: SEYDA_PASSWORT")
+    if not PASSWORT and not aktive_zugaenge(con):
+        raise SystemExit("Bitte zuerst ein Passwort setzen (SEYDA_PASSWORT) oder mit zugang.py einen Zugang anlegen.")
     if not (os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN")):
         raise SystemExit("Bitte zuerst den API Schlüssel setzen: ANTHROPIC_API_KEY")
+    try:
+        server = ThreadingHTTPServer(("127.0.0.1", PORT), Handler)
+    except OSError:
+        raise SystemExit(f"Port {PORT} ist belegt. Läuft SeydaAI schon in einem anderen Fenster? Sonst SEYDA_PORT auf eine andere Zahl setzen.")
     print(f"SeydaAI läuft auf http://127.0.0.1:{PORT}  (beenden mit Strg+C)")
-    ThreadingHTTPServer(("127.0.0.1", PORT), Handler).serve_forever()
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print("SeydaAI beendet.")
