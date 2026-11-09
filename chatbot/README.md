@@ -72,4 +72,4 @@ Preise pro Million Tokens laut Anthropic: Sonnet 5.5 2 USD Eingabe und 10 USD Au
 
 ## Grenzen dieses Prototyps
 
-Die Volltextsuche findet nur Abschnitte, in denen die Suchbegriffe vorkommen. Ob das reicht, zeigt das Prüfset mit deinen 50 Fragen. Die Oberfläche in `web/index.html` ist vorläufig und wird nach deiner Designwahl ersetzt. Aus der TDV İslâm Ansiklopedisi zitiert der Bot nicht wörtlich, sondern fasst nur zusammen.
+Die Volltextsuche findet nur Abschnitte, in denen die Suchbegriffe vorkommen. Ob das reicht, zeigt das Prüfset mit deinen 50 Fragen. Die Oberfläche in `web/index.html` folgt Entwurf 1 „Klassisch“ mit grünem Online Punkt; der Punkt wird grau, wenn der Server nicht antwortet. Die Schriften Cormorant Garamond und Source Sans 3 lädt die Seite bewusst nicht von Google; ohne sie zeigt der Browser Georgia und eine Systemschrift. Vor der Testgruppe binde ich sie lokal ein. Aus der TDV İslâm Ansiklopedisi zitiert der Bot nicht wörtlich, sondern fasst nur zusammen.

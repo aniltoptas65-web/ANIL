@@ -78,6 +78,8 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         if not self._angemeldet():
             return self._sperre()
+        if self.path == "/api/status":
+            return self._json(200, {"online": True})
         if self.path in ("/", "/index.html"):
             with open(os.path.join(WEB, "index.html"), "rb") as f:
                 return self._senden(200, f.read(), "text/html; charset=utf-8")

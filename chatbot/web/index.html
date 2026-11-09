@@ -4,13 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SeydaAI</title>
-<!-- Vorläufige Oberfläche im Stil von Entwurf 1. Wird nach Anils Designwahl ersetzt. -->
+<!-- Oberfläche nach Entwurf 1 "Klassisch" mit grünem Online Punkt (Wahl von Anil, 9. November 2026). -->
 <style>
 :root{--bordeaux:#8B1014;--oliv:#3D5C1E;--creme:#F8F4EE;--sand:#EBE2D4;--rand:#DCCFBC;--text:#2A2320;--leise:#5C5248}
 *{box-sizing:border-box}
-body{margin:0;background:var(--creme);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column;min-height:100vh}
-header{background:var(--bordeaux);color:#fff;padding:18px 20px 14px}
-header h1{margin:0;font-family:Georgia,serif;font-size:28px}
+body{margin:0;background:var(--creme);color:var(--text);font-family:"Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column;min-height:100vh}
+header{background:var(--bordeaux);color:#fff;padding:20px 20px 16px}
+.marke{display:flex;align-items:center;gap:10px}
+header h1{margin:0;font-family:"Cormorant Garamond",Georgia,serif;font-size:30px;font-weight:700;letter-spacing:.5px}
+.punkt{width:11px;height:11px;border-radius:6px;background:#3DDC84;box-shadow:0 0 0 2px #fff;flex-shrink:0}
+.punkt.aus{background:#9A8F86}
 header p{margin:4px 0 0;font-size:13px;color:#F3E3E3}
 .hinweis{background:var(--sand);padding:10px 20px;font-size:13px;color:#4A3F35}
 main{flex:1;width:100%;max-width:720px;margin:0 auto;padding:20px 16px;display:flex;flex-direction:column;gap:16px}
@@ -26,14 +29,18 @@ main{flex:1;width:100%;max-width:720px;margin:0 auto;padding:20px 16px;display:f
 form{position:sticky;bottom:0;background:var(--creme);border-top:1px solid var(--rand);padding:12px 16px 18px}
 .zeile{max-width:720px;margin:0 auto;display:flex;gap:8px}
 input{flex:1;min-height:46px;border:1px solid #C9B9A3;border-radius:23px;padding:0 16px;font:inherit;font-size:16px;background:#fff}
-button.senden{min-width:46px;height:46px;border:none;border-radius:23px;background:var(--bordeaux);color:#fff;font:inherit;padding:0 16px;cursor:pointer}
+button.senden{width:46px;height:46px;border:none;border-radius:23px;background:var(--bordeaux);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
 button:disabled{opacity:.6}
 .unsichtbar{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 </style>
 </head>
 <body>
 <header>
-  <h1>SeydaAI</h1>
+  <div class="marke">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#DEC090" stroke-width="1.6" aria-hidden="true"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9z"/></svg>
+    <span id="punkt" class="punkt" role="img" aria-label="Online" title="Online"></span>
+    <h1>SeydaAI</h1>
+  </div>
   <p>Antworten aus Diyanet, TDV und Semerkand</p>
 </header>
 <div class="hinweis">Hier antwortet eine KI. Sie kann sich irren und ersetzt keinen Gelehrten. Interner Test.</div>
@@ -42,7 +49,7 @@ button:disabled{opacity:.6}
   <div class="zeile">
     <label for="eingabe" class="unsichtbar">Deine Frage</label>
     <input id="eingabe" type="text" maxlength="1000" autocomplete="off" placeholder="Stell deine Frage auf Deutsch oder Türkisch">
-    <button class="senden" type="submit" aria-label="Frage senden">Fragen</button>
+    <button class="senden" type="submit" aria-label="Frage senden"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
   </div>
 </form>
 <script>
@@ -50,6 +57,19 @@ const verlauf = document.getElementById("verlauf");
 const formular = document.getElementById("formular");
 const eingabe = document.getElementById("eingabe");
 const knopf = formular.querySelector("button");
+const punkt = document.getElementById("punkt");
+
+// Grüner Punkt, solange der Server antwortet; grau, wenn keine Verbindung besteht
+function status(online) {
+  punkt.classList.toggle("aus", !online);
+  const text = online ? "Online" : "Offline";
+  punkt.setAttribute("aria-label", text); punkt.title = text;
+}
+async function pruefen() {
+  try { const r = await fetch("/api/status", {cache: "no-store"}); status(r.ok); }
+  catch (e) { status(false); }
+}
+pruefen(); setInterval(pruefen, 30000);
 
 function el(tag, klasse, text) {
   const e = document.createElement(tag);
@@ -106,6 +126,7 @@ formular.addEventListener("submit", async (ev) => {
     else { antwortZeigen(frage, daten); }
   } catch (e) {
     warten.remove();
+    status(false);
     verlauf.appendChild(el("div", "antwort fehler", "Keine Verbindung zum Server."));
   } finally { knopf.disabled = false; eingabe.focus(); }
 });
