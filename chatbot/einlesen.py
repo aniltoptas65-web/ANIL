@@ -162,7 +162,7 @@ def main():
             continue
         print(f"Quelle: {q['name']}")
         anzahl = quelle_einlesen(con, q)
-        print(f"Fertig: {anzahl} Seiten von {q['name']}\n")
+        print(f"Fertig: {anzahl} {'Seite' if anzahl == 1 else 'Seiten'} von {q['name']}\n")
 
 
 if __name__ == "__main__":

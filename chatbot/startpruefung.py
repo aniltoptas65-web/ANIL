@@ -2,7 +2,7 @@
 
   python startpruefung.py quellen      zeigt, wie viele Seiten je Quelle eingelesen sind (keine Ausgabe, wenn leer)
   python startpruefung.py schluessel   prüft den API Schlüssel aus ANTHROPIC_API_KEY mit einer kostenlosen Abfrage
-                                       Rückgabe: 0 gültig, 2 ungültig, 1 unklar (zum Beispiel keine Verbindung)
+                                       Rückgabe: 0 gültig, 2 ungültig, 1 unklar (zum Beispiel keine Verbindung oder 403)
 """
 
 import sys
@@ -25,7 +25,9 @@ def schluessel() -> int:
     except anthropic.AuthenticationError:
         return 2
     except anthropic.PermissionDeniedError:
-        return 2
+        # 403 kann auch an Netz oder Region liegen, deshalb nicht als falscher Schlüssel werten
+        print("Claude meldet keinen Zugriff (403). Das kann am Netzwerk oder an der Region liegen, nicht unbedingt am Schlüssel.")
+        return 1
     except Exception as e:  # Netz, Zeitüberschreitung und Ähnliches: nicht entscheidbar
         print(f"Der Schlüssel ließ sich gerade nicht prüfen ({type(e).__name__}).")
         return 1

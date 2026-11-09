@@ -6,7 +6,7 @@
 # Die Python Umgebung liegt unter %LOCALAPPDATA%\SeydaAI\venv, weil Windows sehr lange Pfade sonst nicht verträgt.
 # Der API Schlüssel landet nie im Projektordner. Auf Wunsch wird er mit dem Windows eigenen Schutz (DPAPI)
 # verschlüsselt unter %LOCALAPPDATA%\SeydaAI gespeichert; nur dein Windows Benutzerkonto kann ihn wieder lesen.
-# Als Umgebungsvariable bekommt ihn nur der SeydaAI Server selbst, nicht dieses Fenster und nicht der Browser.
+# Als Umgebungsvariable bekommen ihn nur die Schlüsselprüfung und der SeydaAI Server, nicht dieses Fenster und nicht der Browser.
 
 $ErrorActionPreference = "Continue"
 Set-Location -LiteralPath $PSScriptRoot
@@ -45,10 +45,11 @@ function PortBelegt([int]$nummer) {
 }
 
 # Sucht ein Python ab Version 3.10. Gibt den Befehl als Liste zurück (zum Beispiel py -3), sonst $null.
+# Python aus dem Microsoft Store (Pfad mit WindowsApps) wird übergangen, weil es Schreibzugriffe unter
+# AppData umleiten kann und die Umgebung dann nicht dort landet, wo das Skript sie sucht.
 function PythonFinden {
     $kandidaten = New-Object System.Collections.ArrayList
     [void]$kandidaten.Add(@("py", "-3"))
-    [void]$kandidaten.Add(@("python"))
     $muster = @(
         (Join-Path $env:LOCALAPPDATA "Programs\Python\Python3*\python.exe"),
         (Join-Path $env:ProgramFiles "Python3*\python.exe")
@@ -56,11 +57,12 @@ function PythonFinden {
     foreach ($m in $muster) {
         Get-ChildItem -Path $m -ErrorAction SilentlyContinue | ForEach-Object { [void]$kandidaten.Add(@($_.FullName)) }
     }
+    [void]$kandidaten.Add(@("python"))
     foreach ($k in $kandidaten) {
         $befehl = $k[0]
         $rest = @($k | Select-Object -Skip 1)
         try {
-            $ausgabe = & $befehl @rest -c "import sys; print(1 if sys.version_info >= (3, 10) else 0)" 2>$null
+            $ausgabe = & $befehl @rest -c "import sys; print(1 if sys.version_info >= (3, 10) and 'WindowsApps' not in sys.executable else 0)" 2>$null
             if ($LASTEXITCODE -eq 0 -and "$ausgabe".Trim() -eq "1") { return ,$k }
         } catch { }
     }
@@ -123,7 +125,7 @@ function GeheimGespeichert([string]$datei, [string]$name) {
 Write-Host "SeydaAI, interner Test" -ForegroundColor Yellow
 
 if (PortBelegt $Port) {
-    Stopp "Unter $Adresse antwortet schon ein Programm. Läuft SeydaAI vielleicht schon in einem anderen Fenster? Dann einfach den Browser dort verwenden oder das andere Fenster schließen."
+    Stopp "Unter $Adresse antwortet schon ein Programm. Läuft SeydaAI vielleicht schon in einem anderen Fenster? Dann einfach den Browser dort verwenden oder das andere Fenster schließen. Ist kein anderes SeydaAI Fenster offen, belegt ein anderes Programm diese Adresse; dann hilft meist ein Neustart des Rechners."
 }
 
 # 1. Python Umgebung
@@ -150,7 +152,7 @@ if (-not (UmgebungBrauchbar)) {
     & $befehl @rest -m venv $VenvOrdner
     if ($LASTEXITCODE -ne 0 -or -not (UmgebungBrauchbar)) {
         UmgebungLoeschen
-        Stopp "Die Python Umgebung ließ sich nicht anlegen. Die Meldung steht oben."
+        Stopp "Die Python Umgebung ließ sich nicht anlegen. Die Meldung steht oben. Hilft oft: Python direkt von https://www.python.org/downloads/ installieren und noch einmal starten."
     }
 }
 

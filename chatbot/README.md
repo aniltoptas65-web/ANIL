@@ -16,11 +16,13 @@ Der Bot beantwortet Fragen ausschließlich aus eingelesenen öffentlichen Seiten
 
 1. Die ZIP Datei ganz entpacken (Rechtsklick, „Alle extrahieren“), nicht aus der ZIP heraus starten.
 2. Im entpackten Ordner `SeydaAI_starten.bat` doppelklicken. Zeigt Windows eine Warnung, je nach Fenster auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken oder auf „Ausführen“.
-3. Beim ersten Mal fragt das Fenster nach Python (falls es fehlt, kann es Python über winget installieren), nach dem API Schlüssel aus der [Claude Konsole](https://platform.claude.com/) und nach einem frei wählbaren Passwort für die Seite. Der Schlüssel wird sofort mit einer kostenlosen Abfrage geprüft.
+3. Beim ersten Mal richtet das Fenster Python ein (fehlt Python, bietet es an, es über winget zu installieren) und fragt nach dem API Schlüssel aus der [Claude Konsole](https://platform.claude.com/) und nach einem frei wählbaren Passwort für die Seite. Der Schlüssel wird sofort mit einer kostenlosen Abfrage geprüft.
 4. Danach fragt es, ob Quellen eingelesen werden sollen, und öffnet SeydaAI im Browser. Benutzername beliebig, Passwort wie festgelegt.
 5. Beenden: das Fenster schließen.
 
-Die Python Umgebung liegt unter `%LOCALAPPDATA%\SeydaAI\venv`, weil Windows sehr lange Pfade sonst nicht verträgt. Wenn du Schlüssel und Passwort merken lässt, liegen sie verschlüsselt im selben Ordner (Windows DPAPI, lesbar nur mit deinem Windows Konto). Beim nächsten Start fragt das Fenster, ob es sie verwenden soll; mit `n` gibst du neue ein. Der Schlüssel landet nie im Projektordner und wird nur an den SeydaAI Server weitergegeben, nicht dauerhaft in Windows gesetzt. So stört er auch Claude Code auf deinem Rechner nicht.
+In der ZIP heißt der Ordner `SeydaAI`, im Repo `chatbot`; gemeint ist derselbe Ordner. Befehle wie `python zugang.py` gibst du unter Windows am besten so ein, damit das richtige Python greift: `%LOCALAPPDATA%\SeydaAI\venv\Scripts\python.exe zugang.py liste` (in der Eingabeaufforderung, im Ordner SeydaAI). Belegt ein anderes Programm die Adresse 127.0.0.1:8000, lässt sich mit der Umgebungsvariable `SEYDA_PORT` eine andere Zahl wählen.
+
+Die Python Umgebung liegt unter `%LOCALAPPDATA%\SeydaAI\venv`, weil Windows sehr lange Pfade sonst nicht verträgt. Wenn du Schlüssel und Passwort merken lässt, liegen sie verschlüsselt in `%LOCALAPPDATA%\SeydaAI` (Windows DPAPI, lesbar nur mit deinem Windows Konto). Beim nächsten Start fragt das Fenster, ob es sie verwenden soll; mit `n` gibst du neue ein. Der Schlüssel landet nie im Projektordner, geht nur an die Schlüsselprüfung und an den SeydaAI Server und wird nicht dauerhaft in Windows gesetzt. So stört er auch Claude Code auf deinem Rechner nicht.
 
 ## Einrichten von Hand (Mac, Linux oder Windows)
 
