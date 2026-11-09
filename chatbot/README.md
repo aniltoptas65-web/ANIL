@@ -12,7 +12,17 @@ Der Bot beantwortet Fragen ausschließlich aus eingelesenen öffentlichen Seiten
 4. Claude Sonnet formuliert nur aus diesen Abschnitten eine Antwort. Die Claude API markiert, welche Textstücke sich auf welche Quelle stützen (Citations). Textstücke ohne Beleg blendet der Bot aus und sagt das unter der Antwort. Stehen bleiben nur kurze Überleitungen ohne Satz und die gekennzeichnete Übersetzung direkt nach einem belegten Zitat. Der Verweis an Imam oder Fetva Stelle steht fest unter jeder Antwort. Hat die Antwort gar keinen Beleg, zeigt er stattdessen „nichts gefunden“.
 5. Bei Wörtern, die auf eine Krise oder Gewalt hindeuten, antwortet der Bot ohne Sprachmodell sofort mit Hilfsnummern, auf Deutsch oder Türkisch. Das gilt auch, wenn das Tageslimit erreicht ist.
 
-## Einrichten auf deinem Rechner
+## Windows: einfach per Doppelklick
+
+1. Die ZIP Datei ganz entpacken (Rechtsklick, „Alle extrahieren“), nicht aus der ZIP heraus starten.
+2. Im entpackten Ordner `SeydaAI_starten.bat` doppelklicken. Zeigt Windows eine Warnung, je nach Fenster auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken oder auf „Ausführen“.
+3. Beim ersten Mal fragt das Fenster nach Python (falls es fehlt, kann es Python über winget installieren), nach dem API Schlüssel aus der [Claude Konsole](https://platform.claude.com/) und nach einem frei wählbaren Passwort für die Seite. Der Schlüssel wird sofort mit einer kostenlosen Abfrage geprüft.
+4. Danach fragt es, ob Quellen eingelesen werden sollen, und öffnet SeydaAI im Browser. Benutzername beliebig, Passwort wie festgelegt.
+5. Beenden: das Fenster schließen.
+
+Die Python Umgebung liegt unter `%LOCALAPPDATA%\SeydaAI\venv`, weil Windows sehr lange Pfade sonst nicht verträgt. Wenn du Schlüssel und Passwort merken lässt, liegen sie verschlüsselt im selben Ordner (Windows DPAPI, lesbar nur mit deinem Windows Konto). Beim nächsten Start fragt das Fenster, ob es sie verwenden soll; mit `n` gibst du neue ein. Der Schlüssel landet nie im Projektordner und wird nur an den SeydaAI Server weitergegeben, nicht dauerhaft in Windows gesetzt. So stört er auch Claude Code auf deinem Rechner nicht.
+
+## Einrichten von Hand (Mac, Linux oder Windows)
 
 Du brauchst Python 3.10 oder neuer ([python.org](https://www.python.org/downloads/); unter Windows bei der Installation das Häkchen „Add python.exe to PATH“ setzen) und einen API Schlüssel aus der [Claude Konsole](https://platform.claude.com/). Lege dort zuerst ein Monatslimit fest, Vorschlag 20 USD.
 
@@ -77,7 +87,7 @@ Solange der Server nur auf deinem Rechner läuft, kommen die Kollegen noch nicht
 
 ## Was gespeichert wird
 
-Fragen und Antworten werden nicht gespeichert. Ausnahme: Drückst du „Antwort melden“, landen diese eine Frage, die Antwort, die Quellen und deine Notiz in der Tabelle `meldungen` in `seyda.db`. Für die Kostenkontrolle zählt die Tabelle `verbrauch` pro Tag nur Modell und Tokens, ohne Text. Für die Zugänge stehen in `zugaenge` Name, Salz und Prüfwert des Codes, Tageslimit, ob der Zugang aktiv ist, und wann er angelegt wurde. In `fragen_pro_person` stehen nur Name, Tag und Anzahl der Fragen, ohne Inhalt. Zählerstände von früheren Tagen löscht der Server bei der nächsten Frage, es entsteht also kein Verlauf.
+Fragen und Antworten werden nicht gespeichert. Ausnahme: Drückst du „Antwort melden“, landen diese eine Frage, die Antwort, die Quellen und deine Notiz in der Tabelle `meldungen` in `seyda.db`. Für die Kostenkontrolle zählt die Tabelle `verbrauch` pro Tag nur Modell und Tokens, ohne Text. Für die Zugänge stehen in `zugaenge` Name, Salz und Prüfwert des Codes, Tageslimit, ob der Zugang aktiv ist, und wann er angelegt wurde. In `fragen_pro_person` stehen nur Name, Tag und Anzahl der Fragen, ohne Inhalt. Zählerstände von früheren Tagen löscht der Server beim Start und bei jeder gezählten Frage über einen Zugang, es entsteht also kein Verlauf.
 
 Höchstens 50 Fragen pro Tag (änderbar über `SEYDA_MAX_FRAGEN`). Das Limit zählt jede Frage, die an ein Sprachmodell geht.
 

@@ -126,7 +126,7 @@ def name_gueltig(name: str) -> bool:
 def zugang_anlegen(con, name: str, tageslimit: int) -> str:
     """Legt einen Zugang an und gibt den Code zurück. Der Code wird nirgends gespeichert."""
     if not name_gueltig(name):
-        raise ValueError("Name: 1 bis 40 Zeichen, nur Buchstaben, Ziffern, Leerzeichen, Punkt und Unterstrich, nicht admin.")
+        raise ValueError("Name: 1 bis 40 Zeichen, nur Buchstaben, Ziffern, Leerzeichen, Punkt und Unterstrich, ohne Leerzeichen am Anfang oder Ende, nicht admin.")
     if tageslimit < 1:
         raise ValueError("Das Tageslimit muss mindestens 1 sein.")
     code = "".join(secrets.choice(CODE_ZEICHEN) for _ in range(CODE_LAENGE))
@@ -163,10 +163,15 @@ def fragen_heute_person(con, name: str) -> int:
     return zeile[0] if zeile else 0
 
 
+def alte_zaehler_loeschen(con) -> None:
+    """Nur der heutige Tag wird für das Limit gebraucht; ältere Zählerstände werden gelöscht,
+    damit kein Verlauf entsteht, wer wann wie viel gefragt hat."""
+    con.execute("DELETE FROM fragen_pro_person WHERE tag < ?", (date.today().isoformat(),))
+    con.commit()
+
+
 def frage_zaehlen(con, name: str) -> None:
     heute = date.today().isoformat()
-    # Nur der heutige Tag wird für das Limit gebraucht; ältere Zählerstände werden gelöscht,
-    # damit kein Verlauf entsteht, wer wann wie viel gefragt hat.
     con.execute("DELETE FROM fragen_pro_person WHERE tag < ?", (heute,))
     con.execute(
         "INSERT INTO fragen_pro_person VALUES (?, ?, 1) "

@@ -17,7 +17,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import anthropic
 
-from datenbank import aktive_zugaenge, frage_zaehlen, fragen_heute, fragen_heute_person, verbinden, zugang_pruefen
+from datenbank import aktive_zugaenge, alte_zaehler_loeschen, frage_zaehlen, fragen_heute, fragen_heute_person, verbinden, zugang_pruefen
 from seyda import antworten, ist_krise, krisen_antwort
 
 PORT = int(os.environ.get("SEYDA_PORT", "8000"))
@@ -43,6 +43,12 @@ def client() -> anthropic.Anthropic:
     if _client is None:
         _client = anthropic.Anthropic()  # liest ANTHROPIC_API_KEY aus der Umgebung
     return _client
+
+
+class Server(ThreadingHTTPServer):
+    # Unter Windows erlaubt SO_REUSEADDR, einen schon belegten Port noch einmal zu belegen.
+    # Ohne diese Einstellung meldet ein zweites SeydaAI Fenster den belegten Port, statt still daneben zu laufen.
+    allow_reuse_address = os.name != "nt"
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -191,8 +197,9 @@ if __name__ == "__main__":
         raise SystemExit("Bitte zuerst ein Passwort setzen (SEYDA_PASSWORT) oder mit zugang.py einen Zugang anlegen.")
     if not (os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN")):
         raise SystemExit("Bitte zuerst den API Schlüssel setzen: ANTHROPIC_API_KEY")
+    alte_zaehler_loeschen(con)
     try:
-        server = ThreadingHTTPServer(("127.0.0.1", PORT), Handler)
+        server = Server(("127.0.0.1", PORT), Handler)
     except OSError:
         raise SystemExit(f"Port {PORT} ist belegt. Läuft SeydaAI schon in einem anderen Fenster? Sonst SEYDA_PORT auf eine andere Zahl setzen.")
     print(f"SeydaAI läuft auf http://127.0.0.1:{PORT}  (beenden mit Strg+C)")

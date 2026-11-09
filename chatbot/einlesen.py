@@ -166,4 +166,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\nEinlesen abgebrochen. Die bisher eingelesenen Seiten bleiben gespeichert.")
+        sys.exit(1)
