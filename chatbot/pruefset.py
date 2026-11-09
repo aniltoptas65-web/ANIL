@@ -88,6 +88,7 @@ def main() -> int:
     # Rückfrage zur ersten Antwort, so wie der Browser den Verlauf schickt
     verlauf = verlauf_pruefen([{
         "frage": FRAGEN[0], "antwort": erste.get("antwort", ""), "quellen": [q["url"] for q in erste.get("quellen", [])],
+        "abschnitte": erste.get("abschnitte", []),
     }])
     if erste.get("art") in ("antwort", "kein_treffer") and verlauf:
         fragen(len(FRAGEN) + 1, RUECKFRAGE, verlauf)
