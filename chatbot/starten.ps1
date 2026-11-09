@@ -6,7 +6,8 @@
 # Die Python Umgebung liegt unter %LOCALAPPDATA%\SeydaAI\venv, weil Windows sehr lange Pfade sonst nicht verträgt.
 # Der API Schlüssel landet nie im Projektordner. Auf Wunsch wird er mit dem Windows eigenen Schutz (DPAPI)
 # verschlüsselt unter %LOCALAPPDATA%\SeydaAI gespeichert; nur dein Windows Benutzerkonto kann ihn wieder lesen.
-# Als Umgebungsvariable bekommen ihn nur die Schlüsselprüfung und der SeydaAI Server, nicht dieses Fenster und nicht der Browser.
+# Als Umgebungsvariable steht er nur kurz für die Schlüsselprüfung und den Start des SeydaAI Servers bereit und wird danach
+# wieder entfernt; der Browser und andere später gestartete Programme bekommen ihn nicht.
 
 $ErrorActionPreference = "Continue"
 Set-Location -LiteralPath $PSScriptRoot
@@ -62,7 +63,7 @@ function PythonFinden {
         $befehl = $k[0]
         $rest = @($k | Select-Object -Skip 1)
         try {
-            $ausgabe = & $befehl @rest -c "import sys; print(1 if sys.version_info >= (3, 10) and 'WindowsApps' not in sys.executable else 0)" 2>$null
+            $ausgabe = & $befehl @rest -c "import sys; print(1 if sys.version_info >= (3, 10) and 'windowsapps' not in sys.executable.lower() else 0)" 2>$null
             if ($LASTEXITCODE -eq 0 -and "$ausgabe".Trim() -eq "1") { return ,$k }
         } catch { }
     }
@@ -125,7 +126,7 @@ function GeheimGespeichert([string]$datei, [string]$name) {
 Write-Host "SeydaAI, interner Test" -ForegroundColor Yellow
 
 if (PortBelegt $Port) {
-    Stopp "Unter $Adresse antwortet schon ein Programm. Läuft SeydaAI vielleicht schon in einem anderen Fenster? Dann einfach den Browser dort verwenden oder das andere Fenster schließen. Ist kein anderes SeydaAI Fenster offen, belegt ein anderes Programm diese Adresse; dann hilft meist ein Neustart des Rechners."
+    Stopp "Unter $Adresse antwortet schon ein Programm. Läuft SeydaAI vielleicht schon in einem anderen Fenster? Dann einfach den Browser dort verwenden oder das andere Fenster schließen. Ist kein anderes SeydaAI Fenster offen, belegt ein anderes Programm diese Adresse; dann hilft oft ein Neustart des Rechners. Sonst steht in der Anleitung README.md, wie man eine andere Adresse wählt."
 }
 
 # 1. Python Umgebung
@@ -134,7 +135,7 @@ if (-not (UmgebungBrauchbar)) {
     UmgebungLoeschen
     $py = PythonFinden
     if (-not $py) {
-        Write-Host "Python 3.10 oder neuer wurde nicht gefunden."
+        Write-Host "Python 3.10 oder neuer wurde nicht gefunden. Python aus dem Microsoft Store zählt dabei nicht mit, weil es hier nicht zuverlässig funktioniert."
         if (Get-Command winget -ErrorAction SilentlyContinue) {
             $antwort = Read-Host "Soll ich Python 3.12 jetzt über winget installieren? Windows fragt dabei eventuell nach deiner Erlaubnis. (j/n)"
             if ($antwort -match '^[jJyY]') {
@@ -163,7 +164,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 Write-Host "Pakete sind bereit."
 
-# 2. Schlüssel und Passwort. Sie bleiben in Variablen und gehen später nur an den Server.
+# 2. Schlüssel und Passwort. Sie bleiben in Variablen und gehen nur an die Schlüsselprüfung und den Server.
 Abschnitt "Zugang"
 $schluessel = GeheimGespeichert $SchluesselDatei "Ein API Schlüssel"
 while ($true) {
