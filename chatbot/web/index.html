@@ -126,6 +126,17 @@ dialog::backdrop{background:rgba(30,20,15,.45)}
 .schalter input{width:22px;height:22px;margin:1px 0 0;flex-shrink:0;accent-color:var(--oliv)}
 .leise{color:var(--leise);font-size:13px;margin:0}
 
+/* Anmeldung mit Name und Zugangscode (nur auf Cloudflare; am Rechner fragt der Browser selbst nach dem Passwort) */
+.anmeldung{position:fixed;inset:0;z-index:50;background:var(--creme);overflow-y:auto;display:flex;flex-direction:column;align-items:center;padding:max(20px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+.anmeldung form{width:100%;max-width:400px;margin:auto 0;background:#fff;border:1px solid var(--rand);border-radius:18px;padding:20px 18px 18px;display:flex;flex-direction:column;gap:8px}
+.anmeldung .logo{align-self:center;background:var(--creme);border:1px solid var(--rand);border-radius:14px;padding:8px 14px}
+.anmeldung .logo img{height:40px}
+.anmeldung h2{margin:4px 0 0;text-align:center;font-family:"Cormorant Garamond",Georgia,serif;font-size:30px;color:var(--bordeaux)}
+.anmeldung label{font-size:14px;color:var(--leise);margin-top:4px}
+.anmeldung input{min-height:48px;border:1px solid var(--knopfrand);border-radius:12px;padding:0 14px;font-size:16px;background:#fff;width:100%}
+.anmeldung button[type=submit]{min-height:48px;border:none;border-radius:24px;background:var(--bordeaux);color:#fff;font-weight:600;font-size:16px;margin-top:4px}
+#anmelde-fehler{color:var(--bordeaux);font-size:14px;margin:0;min-height:1.3em}
+
 [hidden]{display:none!important}
 button:disabled,button.wartet{opacity:.6;cursor:default}
 .unsichtbar{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
@@ -227,9 +238,29 @@ button:disabled,button.wartet{opacity:.6;cursor:default}
     <p id="stimmen-hinweis" class="leise"></p>
     <h3>VERLAUF</h3>
     <label class="schalter"><input type="checkbox" id="verlauf-an"><span>Unterhaltungen auf diesem Gerät speichern. Auf einem Gerät, das mehrere Personen benutzen, besser ausschalten.</span></label>
+    <div id="konto" hidden>
+      <h3>ANMELDUNG</h3>
+      <p id="konto-name" class="leise"></p>
+      <button type="button" id="abmelden" class="probe">Abmelden</button>
+    </div>
     <button class="fertig" value="ok">Fertig</button>
   </form>
 </dialog>
+
+<div id="anmeldung" class="anmeldung" role="dialog" aria-modal="true" aria-labelledby="anmelde-titel" hidden>
+  <form id="anmelde-form" novalidate>
+    <span class="logo"><img src="/reyhani_logo.png" alt="Reyhani Europa" width="81" height="40"></span>
+    <h2 id="anmelde-titel">SeydaAI</h2>
+    <p class="leise">Bitte melde dich mit deinem Namen und deinem Zugangscode an. Den Code bekommst du vom Verein.</p>
+    <label for="anmelde-name">Name</label>
+    <input id="anmelde-name" name="username" autocomplete="username" autocapitalize="words" autocorrect="off" spellcheck="false" maxlength="40">
+    <label for="anmelde-code">Zugangscode</label>
+    <input id="anmelde-code" name="password" type="password" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="60">
+    <p id="anmelde-fehler" role="alert"></p>
+    <button type="submit">Anmelden</button>
+    <p class="leise">Du bleibst 30 Tage angemeldet. Auf einem fremden Gerät meldest du dich danach in den Einstellungen wieder ab und löschst dabei den Verlauf.</p>
+  </form>
+</div>
 
 <script>
 "use strict";
@@ -263,10 +294,86 @@ function status(online) {
   punkt.setAttribute("aria-label", text); punkt.title = text;
 }
 async function pruefen() {
-  try { const r = await fetch("/api/status", {cache: "no-store"}); status(r.ok); }
-  catch (e) { status(false); }
+  try {
+    const r = await fetch("/api/status", {cache: "no-store"});
+    const d = await r.json().catch(() => ({}));
+    status(r.ok || !!d.anmelden);
+    // Ist das Anmeldefenster schon offen, bleibt eine Fehlermeldung darin stehen
+    if (r.status === 401 && d.anmelden) { if (anmeldung.hidden) anmeldungZeigen(); }
+    else if (r.ok) kontoZeigen(d);
+  } catch (e) { status(false); }
 }
-pruefen(); setInterval(pruefen, 30000);
+
+// ---------- Anmeldung (nur auf Cloudflare) ----------
+// Der Server antwortet dort mit 401 und {"anmelden": true}. Am Rechner (server.py) fragt der Browser selbst.
+const anmeldung = $("anmeldung");
+const anmeldeForm = $("anmelde-form");
+const anmeldeFehler = $("anmelde-fehler");
+// Name der aktuellen Sitzung, damit er nach Ablauf der Sitzung schon eingetragen ist (nur im Speicher der Seite)
+let bekannterName = "";
+function hintergrundSperren(an) {
+  for (const e of [document.querySelector(".app"), leiste]) { if (an) e.setAttribute("inert", ""); else e.removeAttribute("inert"); }
+}
+function anmeldungZeigen(text) {
+  if (dialog.open) dialog.close();
+  anmeldeFehler.textContent = text || "";
+  if (!$("anmelde-name").value && bekannterName) $("anmelde-name").value = bekannterName;
+  if (!anmeldung.hidden) return;
+  anmeldung.hidden = false;
+  hintergrundSperren(true);
+  const feld = $("anmelde-name").value ? $("anmelde-code") : $("anmelde-name");
+  setTimeout(() => feld.focus(), 0);
+}
+function kontoZeigen(d) {
+  bekannterName = d && d.name ? d.name : "";
+  $("konto").hidden = !(d && d.sitzung);
+  $("konto-name").textContent = d && d.name ? "Angemeldet als " + d.name + "." : "";
+}
+anmeldeForm.addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const name = $("anmelde-name").value.trim();
+  const code = $("anmelde-code").value.trim();
+  if (!name || !code) { anmeldeFehler.textContent = "Bitte Name und Zugangscode eingeben."; return; }
+  const absenden = anmeldeForm.querySelector("button[type=submit]");
+  absenden.disabled = true;
+  anmeldeFehler.textContent = "";
+  try {
+    const r = await fetch("/api/anmelden", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({name, code})});
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) { anmeldeFehler.textContent = d.fehler || "Die Anmeldung hat nicht geklappt."; return; }
+    $("anmelde-code").value = "";
+    anmeldung.hidden = true;
+    hintergrundSperren(false);
+    kontoZeigen({sitzung: true, name: d.name});
+    status(true);
+    if (!beruehrung) eingabe.focus({preventScroll: true});
+  } catch (e) {
+    anmeldeFehler.textContent = "Keine Verbindung zum Server.";
+  } finally {
+    absenden.disabled = false;
+  }
+});
+$("abmelden").onclick = async () => {
+  let ok = false;
+  try {
+    const r = await fetch("/api/abmelden", {method: "POST", headers: {"Content-Type": "application/json"}, body: "{}"});
+    ok = r.ok;
+  } catch (e) {}
+  if (!ok) {
+    $("konto-name").textContent = "Abmelden hat nicht geklappt. Bitte mit Internetverbindung noch einmal versuchen.";
+    return;
+  }
+  // Der Verlauf liegt auf dem Gerät und bleibt sonst für die nächste Person sichtbar
+  if ((chats.length || verlauf.querySelector(".frage")) &&
+      confirm("Auch den Chatverlauf auf diesem Gerät löschen? Auf einem fremden oder geteilten Gerät bitte ja.")) alleLoeschen();
+  kontoZeigen(null);
+  $("anmelde-name").value = "";
+  anmeldungZeigen("Du bist abgemeldet.");
+};
+// Nur prüfen, solange die Seite sichtbar ist: spart Anfragen (auf Cloudflare zählt jede zum Tageskontingent)
+pruefen();
+setInterval(() => { if (document.visibilityState === "visible") pruefen(); }, 60000);
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") pruefen(); });
 
 function el(tag, klasse, text) {
   const e = document.createElement(tag);
@@ -421,6 +528,10 @@ function antwortZeigen(frage, daten) {
     try {
       const r = await fetch("/api/melden", {method: "POST", headers: {"Content-Type": "application/json"},
         body: JSON.stringify({frage, antwort: daten.antwort, quellen: daten.quellen, notiz})});
+      if (r.status === 401) {
+        const d = await r.json().catch(() => ({}));
+        if (d.anmelden) anmeldungZeigen("Bitte melde dich an und melde die Antwort dann noch einmal.");
+      }
       if (!r.ok) throw new Error();
       melden.textContent = "Gemeldet, danke"; melden.disabled = true;
     } catch (e) {
@@ -753,6 +864,12 @@ async function senden() {
     let daten = {};
     try { daten = await r.json(); } catch (e) {}
     fertig();
+    if (r.status === 401 && daten.anmelden) {
+      if (offen()) zeigen(verlauf.appendChild(el("div", "antwort fehler", "Bitte zuerst anmelden und die Frage dann noch einmal senden.")));
+      if (!eingabe.value) eingabe.value = frage;
+      anmeldungZeigen("Bitte melde dich an. Deine Frage steht danach wieder im Eingabefeld.");
+      return;
+    }
     if (!r.ok) {
       if (offen()) zeigen(verlauf.appendChild(el("div", "antwort fehler", daten.fehler || "Fehler")));
       return;

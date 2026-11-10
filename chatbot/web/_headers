@@ -1,0 +1,10 @@
+# Sicherheitskopfzeilen für die Seite auf Cloudflare (gilt nicht für die Antworten des Workers unter /api/,
+# die setzt src/index.js selbst). Der lokale server.py liefert diese Datei nicht aus.
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: no-referrer
+  X-Robots-Tag: noindex, nofollow
+  Permissions-Policy: microphone=(self), camera=(), geolocation=()
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; media-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'; object-src 'none'
+  Strict-Transport-Security: max-age=31536000

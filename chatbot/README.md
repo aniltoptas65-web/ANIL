@@ -95,7 +95,51 @@ Gezählt wird jede Frage, die an ein Sprachmodell geht, auch wenn danach ein Feh
 
 Mit dem Passwort aus `SEYDA_PASSWORT` meldest du dich weiterhin selbst an, für dich gilt nur die gemeinsame Obergrenze. Ohne `SEYDA_PASSWORT` startet der Server nur, wenn mindestens ein aktiver, also nicht gesperrter Zugang angelegt ist.
 
-Solange der Server nur auf deinem Rechner läuft, kommen die Kollegen noch nicht heran. Dafür braucht es den kleinen gemieteten Server aus dem Plan (Stufe B). Vor diesem Schritt sind noch zwei Dinge nötig: HTTPS, weil die Anmeldung Name und Code sonst lesbar durchs Netz schickt, und die Prüfung der Herkunft in `server.py`, die im Moment nur Anfragen von 127.0.0.1 und localhost zulässt.
+Solange der Server nur auf deinem Rechner läuft, kommen die Kollegen nicht heran. Dafür gibt es die Fassung für Cloudflare (siehe unten). Dort legst du die Zugänge mit `Cloudflare_einrichten.bat` an, nicht mit `zugang.py`; die beiden Listen sind getrennt.
+
+## Online über Cloudflare (ki.reyhani-europa.de)
+
+So kommen du und die Testgruppe auch vom Handy an SeydaAI, ohne dass dein PC läuft. Die Seite liegt bei Cloudflare im kostenlosen Tarif (Workers Free), die eingelesenen Texte in einer Cloudflare Datenbank (D1), die laut Cloudflare nur in der EU läuft und speichert ([Datenstandort](https://developers.cloudflare.com/d1/configuration/data-location/)). An die EU gebunden ist nur die Datenbank; der Worker selbst läuft im Rechenzentrum von Cloudflare, das dem Aufrufenden am nächsten ist. Der Bot arbeitet dort genauso wie auf dem PC: Der Ordner `cloudflare/src` enthält dieselben Schritte, Anweisungen und Filter in JavaScript; ein Vergleichstest (`npm test` im Ordner `cloudflare`) prüft, dass beide Fassungen bei denselben Eingaben dasselbe liefern.
+
+### Einrichten (einmal)
+
+Vorher nötig: `SeydaAI_starten.bat` lief auf diesem PC schon einmal und hat Quellen eingelesen, die Domain reyhani-europa.de liegt in deinem Cloudflare Konto, und du hast einen API Schlüssel aus der [Claude Konsole](https://platform.claude.com/). Am besten dort einen eigenen Schlüssel für Cloudflare anlegen, dann lässt er sich getrennt sperren.
+
+1. `Cloudflare_einrichten.bat` doppelklicken.
+2. Fehlt Node.js ab Version 22.12, bietet das Fenster an, es über winget zu installieren. Danach installiert es wrangler, das Werkzeug von Cloudflare, in den Ordner `cloudflare` (nur beim ersten Mal).
+3. Dein Browser öffnet die Anmeldung von Cloudflare. Mit dem Konto anmelden, in dem reyhani-europa.de liegt, und den Zugriff erlauben. Hängen an der Anmeldung mehrere Konten, fragt das Fenster, welches gemeint ist. Das Skript bekommt dein Cloudflare Passwort nie zu sehen. wrangler merkt sich die Anmeldung auf diesem PC; abmelden geht im Ordner `cloudflare` mit `node node_modules/wrangler/bin/wrangler.js logout`.
+4. Es legt die Datenbank `seyda` in der EU an, richtet die Tabellen ein und lädt die Texte aus `seyda.db` hoch. Liegt `seyda.db` noch in einem älteren SeydaAI Ordner, kannst du sie dort auswählen; sie wird dann hierher kopiert.
+5. Es veröffentlicht SeydaAI unter https://ki.reyhani-europa.de. Den DNS Eintrag und das Zertifikat legt Cloudflare selbst an. Fragt wrangler auf Englisch, ob vorhandene Einträge ersetzt werden sollen („Update them to point to this script instead?“), nur mit y antworten, wenn ki.reyhani-europa.de für nichts anderes genutzt wird. Die Vereinsseite selbst ist davon nicht betroffen.
+6. Es fragt nach dem API Schlüssel (oder nimmt auf Wunsch den von `SeydaAI_starten.bat` gespeicherten), prüft ihn mit einer kostenlosen Abfrage und hinterlegt ihn bei Cloudflare als verschlüsseltes Secret. Für die Prüfung steht er kurz in der Umgebung dieses Fensters, an wrangler geht er über die Eingabe. Das Skript selbst legt ihn nur bei Cloudflare ab, nicht in einer Datei und nicht dauerhaft in Windows. Hat `SeydaAI_starten.bat` ihn schon verschlüsselt gespeichert (siehe oben), bleibt er dort wie bisher.
+7. Zum Schluss legt es deinen ersten Zugang an und zeigt den Code einmal an.
+
+Beim allerersten Mal kann es einige Minuten dauern, bis Adresse und Zertifikat erreichbar sind. Dann auf dem Handy https://ki.reyhani-europa.de öffnen und mit Name und Code anmelden. Die Anmeldung hält 30 Tage; abmelden geht über das Zahnrad. Großschreibung und Leerzeichen im Code sind egal. Beim Namen ist Groß und Kleinschreibung ebenfalls egal, außer bei türkischen Buchstaben (ş und Ş gelten als verschieden); deshalb lassen sich keine zwei Namen anlegen, die sich nur darin unterscheiden. Türkische Buchstaben im Namen gehen hier (anders als beim Anmeldefenster des PC Servers). Beim Abmelden fragt die Seite, ob sie auch den Chatverlauf auf dem Gerät löschen soll; auf einem fremden oder geteilten Gerät bitte ja.
+
+### Danach: das Menü
+
+Jeder weitere Doppelklick auf `Cloudflare_einrichten.bat` zeigt ein Menü: Zugang anlegen, anzeigen, sperren oder löschen (1 bis 4), gemeldete Antworten ansehen und danach auf Wunsch löschen (5), Texte neu hochladen nach neuem Einlesen mit `SeydaAI_starten.bat` (6), neue Version veröffentlichen (7), API Schlüssel ändern (8), Fehlermeldungen live ansehen (9) und alles einrichten oder prüfen (10). Sperren und Löschen melden die Person auch auf allen Geräten ab. Wurde die Einrichtung abgebrochen, etwa beim Veröffentlichen, macht der nächste Doppelklick dort weiter, bevor das Menü kommt.
+
+Bei einer neuen ZIP läuft beim ersten Doppelklick wieder die Einrichtung durch. Sie findet die vorhandene Datenbank, legt nichts doppelt an, fragt, ob die Texte neu hochgeladen werden sollen, veröffentlicht die neue Version und behält auf Wunsch den hinterlegten Schlüssel. Entpackst du die neue ZIP in den bisherigen Ordner (Dateien ersetzen), bleibt `seyda.db` dort liegen.
+
+Von Hand geht dasselbe im Ordner `cloudflare` mit `"%LOCALAPPDATA%\SeydaAI\venv\Scripts\python.exe" cloud.py`, zum Beispiel `cloud.py zugang neu "Ayşe K" 10`, `cloud.py zugang liste` oder `cloud.py stand`. Mit `--lokal` wirkt es auf die Testdatenbank von `wrangler dev`.
+
+### Grenzen des kostenlosen Tarifs
+
+Laut Cloudflare: 100.000 Anfragen an den Worker am Tag (zurückgesetzt um Mitternacht UTC), höchstens 10 ms Rechenzeit je Anfrage, wobei Warten auf Claude oder die Datenbank nicht zählt ([Workers Limits](https://developers.cloudflare.com/workers/platform/limits/)), und für D1 täglich 5 Millionen gelesene und 100.000 geschriebene Zeilen bei höchstens 500 MB je Datenbank ([D1 Preise](https://developers.cloudflare.com/d1/platform/pricing/), [D1 Limits](https://developers.cloudflare.com/d1/platform/limits/)). Ist ein Tageskontingent aufgebraucht, antwortet D1 bis zum nächsten Tag mit Fehlern. Die Seite selbst (HTML, Logo, Schriften) zählt laut Cloudflare nicht mit, Anfragen an statische Dateien sind dort kostenlos und unbegrenzt ([Cloudflare](https://developers.cloudflare.com/workers/static-assets/billing-and-limitations/)).
+
+Gemessen am nachgebauten Cloudflare auf unserem Testrechner, nicht im echten Konto: Die Suche liest je Frage etwa 50 bis 75 Zeilen, ein Hochladen schreibt etwa eine Zeile je Abschnitt (10.622 Zeilen bei 10.622 Abschnitten). Mehrmals am Tag neu hochladen kann das Schreibkontingent also aufbrauchen. Das Hochladen ersetzt die Texte nicht in einem Schritt: Bis es fertig ist, findet SeydaAI nur einen Teil, und bricht es ab (Netz, Kontingent), bleibt das so bis zum nächsten vollständigen Hochladen. Die Aufbereitung einer langen Antwort brauchte im Median etwa 2 ms Rechenzeit, der langsamste Lauf etwa 22 ms (vermutlich der erste nach dem Start). Ob Cloudflare im echten Betrieb genauso zählt, zeigt das Dashboard unter Workers und D1. Bricht eine Antwort mit einem Fehler zur Rechenzeit ab (Menüpunkt 9 zeigt ihn), hebt der bezahlte Tarif Workers Paid diese Grenze.
+
+### Was bei Cloudflare gespeichert wird
+
+In D1 stehen die Texte der Quellen, die Zugänge (Name, Salz, Prüfwert des Codes, Tageslimit, aktiv, angelegt), die Sitzungen (nur ein Prüfwert des Cookies, Name und Ablaufzeit; abgelaufene löscht jede neue Anmeldung), die Zähler je Person nur für heute, der Verbrauch je Tag ohne Text und die Meldungen über „Antwort melden“ (ansehen und löschen über Menüpunkt 5). Fragen und Antworten aus dem Chat speichert der Worker nicht; der Verlauf bleibt wie auf dem PC auf dem Gerät. Dauerhafte Protokolle bei Cloudflare sind ausgeschaltet (`observability` in `wrangler.jsonc`), Fehlermeldungen enthalten keine Fragen. Cloudflare verarbeitet als Dienstleister trotzdem technische Daten der Aufrufe wie IP Adressen. Cloudflare bietet dafür eine [Vereinbarung zur Auftragsverarbeitung](https://www.cloudflare.com/cloudflare-customer-dpa/) an; ob und wie sie für ein kostenloses Konto gilt, sagt die Seite nicht und ist vor der Testgruppe zu klären, ebenso wie bei Anthropic.
+
+### Wenn etwas hakt
+
+Veröffentlichen schlägt fehl: Meist liegt reyhani-europa.de in einem anderen Cloudflare Konto, oder für ki.reyhani-europa.de gibt es schon einen DNS Eintrag. Dann in Cloudflare unter DNS den Eintrag `ki` löschen und `Cloudflare_einrichten.bat` noch einmal doppelklicken (während der Einrichtung) oder Menüpunkt 7 wählen (später). Die Seite meldet „Der API Schlüssel ist ungültig“: Menüpunkt 8. Fehler im Betrieb: Menüpunkt 9 zeigt sie live, gespeichert werden sie nicht.
+
+Wichtig: Die Datenbank nie mit `wrangler d1 export` sichern. Laut [Cloudflare](https://developers.cloudflare.com/d1/best-practices/import-export-data/) geht der Export bei Datenbanken mit virtuellen Tabellen wie der Volltextsuche nicht, und ein laufender Export blockiert andere Anfragen. Die Texte lassen sich jederzeit aus `seyda.db` neu hochladen, die Zugänge zeigt `cloud.py zugang liste`.
+
+Zum Testen am Rechner ohne Kosten: `node test/modell_nachbildung.mjs 8799` starten (bildet die Claude API nach), im Ordner `cloudflare` eine Datei `.dev.vars` mit den zwei Zeilen `ANTHROPIC_API_KEY=sk-ant-test-schluessel` und `ANTHROPIC_BASE_URL=http://127.0.0.1:8799` anlegen (keinen echten Schlüssel), `node node_modules/wrangler/bin/wrangler.js dev` starten und Testdaten mit `cloud.py hochladen --lokal` und `cloud.py zugang neu "Test" 5 --lokal` füllen.
 
 ## Spracheingabe und Vorlesen
 
@@ -111,7 +155,7 @@ Links steht eine Seitenleiste mit früheren Unterhaltungen, auf dem Handy über 
 
 Der Verlauf liegt im Speicher der Seite auf dem jeweiligen Gerät, höchstens 50 Unterhaltungen mit je 40 Fragen. Wird der Speicher voll, fällt die älteste Unterhaltung weg; passt nicht einmal die neueste hinein, sagt die Seite unten in der Seitenleiste, dass nichts gespeichert wurde. Wer das Gerät benutzt, kann den Verlauf sehen, auch wenn sich mehrere Personen mit verschiedenen Zugängen am selben Gerät anmelden. Darum lässt er sich über das Zahnrad ausschalten; dabei werden die gespeicherten Unterhaltungen auf dem Gerät gelöscht und die Seite beginnt einen neuen Chat. Solange der Verlauf aus ist, wird nichts gespeichert, und beim Wiedereinschalten beginnt der Verlauf leer. Ist die Seite in mehreren Fenstern offen, zeigen alle denselben Verlauf; wird eine Unterhaltung in einem Fenster gelöscht, verschwindet sie auch in den anderen. Fragen, auf die der Bot mit den Hilfsnummern antwortet (Krise, Gewalt), kommen nie in den Verlauf.
 
-Mit dem Hosting soll ein Verlauf auf dem Server dazukommen, der auf Handy und PC gleich ist; dafür braucht es eine Anmeldung je Person und eine ausdrückliche Einwilligung, weil Fragen zum Glauben religiöse Überzeugungen erkennen lassen können ([Art. 9 DSGVO](https://recht.nulegal.eu/gesetze/DSGVO/9)). Solange SeydaAI auf deinem PC läuft (Adresse 127.0.0.1), ist es vom Handy aus nicht erreichbar. Die Handyansicht lässt sich am PC trotzdem ansehen: in Edge oder Chrome F12 drücken und dann Strg+Umschalt+M.
+Mit dem Hosting soll ein Verlauf auf dem Server dazukommen, der auf Handy und PC gleich ist; dafür braucht es eine Anmeldung je Person und eine ausdrückliche Einwilligung, weil Fragen zum Glauben religiöse Überzeugungen erkennen lassen können ([Art. 9 DSGVO](https://recht.nulegal.eu/gesetze/DSGVO/9)). Solange SeydaAI auf deinem PC läuft (Adresse 127.0.0.1), ist es vom Handy aus nicht erreichbar; über Cloudflare (siehe unten) geht es. Die Handyansicht lässt sich am PC trotzdem ansehen: in Edge oder Chrome F12 drücken und dann Strg+Umschalt+M.
 
 ## Was gespeichert wird
 

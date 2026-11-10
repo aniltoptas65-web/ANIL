@@ -1,0 +1,36 @@
+// Einstellungen für Cloudflare (wrangler). Einrichten: Cloudflare_einrichten.bat im Ordner darüber.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "seydaai",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-01",
+  // Die Seite selbst (index.html, Logo, Schriften) liefert Cloudflare direkt aus dem Ordner web aus.
+  // Nur Adressen unter /api/ gehen an den Worker.
+  "assets": {
+    "directory": "../web",
+    "run_worker_first": ["/api/*"]
+  },
+  // Erreichbar nur unter dieser Adresse. Cloudflare legt DNS Eintrag und Zertifikat selbst an.
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [
+    { "pattern": "ki.reyhani-europa.de", "custom_domain": true }
+  ],
+  // Die Datenbank legt cloud.py datenbank an (in der EU) und trägt hier ihre Kennung ein.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "seyda",
+      "database_id": "noch-nicht-angelegt",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "vars": {
+    // Höchstens so viele Fragen am Tag für alle zusammen (zusätzlich gilt das Tageslimit je Zugang)
+    "SEYDA_MAX_FRAGEN": "100"
+  },
+  // Keine dauerhaften Protokolle bei Cloudflare (Datenschutz). Fehler live ansehen: npx wrangler tail
+  "observability": { "enabled": false },
+  // Keine Nutzungsdaten an Cloudflare senden
+  "send_metrics": false
+}
