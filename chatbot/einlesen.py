@@ -15,7 +15,6 @@ und bleibt innerhalb der in quellen.json erlaubten Adressen.
 import hashlib
 import html
 import json
-import os
 import re
 import sys
 import time
@@ -26,7 +25,7 @@ from urllib.parse import urljoin, urldefrag, urlparse
 import requests
 from bs4 import BeautifulSoup
 
-from datenbank import verbinden
+from datenbank import fremde_quellen_entfernen, quellen_laden, verbinden
 
 PAUSE_SEKUNDEN = 2.0
 NEU_NACH_TAGEN = 30
@@ -34,11 +33,6 @@ ABSCHNITT_ZEICHEN = 1500
 KENNUNG = "SeydaAI Prototyp (Reyhani Europa e.V., interner Test)"
 
 UNWICHTIG = ["script", "style", "noscript", "nav", "header", "footer", "aside", "form", "iframe", "svg"]
-
-
-def quellen_laden() -> list[dict]:
-    with open(os.path.join(os.path.dirname(__file__), "quellen.json"), encoding="utf-8") as f:
-        return json.load(f)["quellen"]
 
 
 def text_holen(soup: BeautifulSoup) -> tuple[str, list[str]]:
@@ -290,6 +284,9 @@ def main():
     if nur and nur not in [q["kurz"] for q in quellen]:
         raise SystemExit(f"Unbekannte Quelle: {nur}. Möglich: {', '.join(q['kurz'] for q in quellen)}")
     con = verbinden()
+    entfernt = fremde_quellen_entfernen(con)
+    if entfernt:
+        print(f"{entfernt} Seiten von Quellen entfernt, die nicht mehr in quellen.json stehen\n")
     for q in quellen:
         if nur and q["kurz"] != nur:
             continue

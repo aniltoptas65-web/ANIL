@@ -17,7 +17,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import anthropic
 
-from datenbank import aktive_zugaenge, alte_zaehler_loeschen, frage_zaehlen, fragen_heute, fragen_heute_person, verbinden, zugang_pruefen
+from datenbank import aktive_zugaenge, alte_zaehler_loeschen, frage_zaehlen, fremde_quellen_entfernen, fragen_heute, fragen_heute_person, verbinden, zugang_pruefen
 from seyda import antworten, ist_krise, krisen_antwort, verlauf_pruefen
 
 PORT = int(os.environ.get("SEYDA_PORT", "8000"))
@@ -202,6 +202,9 @@ if __name__ == "__main__":
     if not (os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN")):
         raise SystemExit("Bitte zuerst den API Schlüssel setzen: ANTHROPIC_API_KEY")
     alte_zaehler_loeschen(con)
+    entfernt = fremde_quellen_entfernen(con)
+    if entfernt:
+        print(f"{entfernt} Seiten von Quellen entfernt, die nicht mehr in quellen.json stehen")
     try:
         server = Server(("127.0.0.1", PORT), Handler)
     except OSError:

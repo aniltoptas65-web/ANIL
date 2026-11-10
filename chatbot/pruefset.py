@@ -13,7 +13,7 @@ from datetime import datetime
 
 import anthropic
 
-from datenbank import fragen_heute, verbinden
+from datenbank import fragen_heute, fremde_quellen_entfernen, verbinden
 from seyda import antworten, verlauf_pruefen
 
 FRAGEN = [
@@ -58,6 +58,7 @@ def main() -> int:
         print("Bitte zuerst den API Schlüssel setzen: ANTHROPIC_API_KEY")
         return 1
     con = verbinden()
+    fremde_quellen_entfernen(con)
     if not con.execute("SELECT COUNT(*) FROM seiten").fetchone()[0]:
         print("Es sind noch keine Quellen eingelesen. Bitte zuerst einlesen.")
         return 1

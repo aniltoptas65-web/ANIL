@@ -2,6 +2,7 @@
 
 import hashlib
 import hmac
+import json
 import os
 import re
 import secrets
@@ -9,6 +10,7 @@ import sqlite3
 from datetime import date, datetime, timezone
 
 DB_PFAD = os.environ.get("SEYDA_DB", os.path.join(os.path.dirname(__file__), "seyda.db"))
+QUELLEN_PFAD = os.path.join(os.path.dirname(__file__), "quellen.json")
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS seiten (
@@ -93,6 +95,25 @@ def verbinden(pfad: str = None) -> sqlite3.Connection:
             con.execute(f"ALTER TABLE {tabelle} ADD COLUMN {spalte} TEXT")
             con.commit()
     return con
+
+
+def quellen_laden() -> list[dict]:
+    with open(QUELLEN_PFAD, encoding="utf-8") as f:
+        return json.load(f)["quellen"]
+
+
+def fremde_quellen_entfernen(con) -> int:
+    """Löscht Seiten und Abschnitte von Quellen, die nicht mehr in quellen.json stehen
+    (zum Beispiel Semerkand und Serhendi, seit 10. November 2026 entfernt). Gibt die Zahl der Seiten zurück."""
+    namen = [q["name"] for q in quellen_laden()]
+    if not namen:  # leere oder kaputte Liste: lieber nichts löschen
+        return 0
+    platz = ",".join("?" * len(namen))
+    seiten = con.execute(f"SELECT COUNT(*) FROM seiten WHERE quelle NOT IN ({platz})", namen).fetchone()[0]
+    con.execute(f"DELETE FROM abschnitte WHERE quelle NOT IN ({platz})", namen)
+    con.execute(f"DELETE FROM seiten WHERE quelle NOT IN ({platz})", namen)
+    con.commit()
+    return seiten
 
 
 def _wort(w: str) -> str:

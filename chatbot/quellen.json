@@ -226,24 +226,6 @@
       "max_tiefe": 1,
       "nur_zusammenfassen": true,
       "max_seiten": 800
-    },
-    {
-      "name": "Semerkand",
-      "kurz": "semerkand",
-      "start": [],
-      "folgen": [],
-      "nur_zusammenfassen": false,
-      "max_seiten": 500,
-      "_offen": "semerkand.com.tr ist nur die Firmenseite ohne religiöse Texte. Adresse der Seite mit den Texten hier eintragen."
-    },
-    {
-      "name": "Serhendi",
-      "kurz": "serhendi",
-      "start": [],
-      "folgen": [],
-      "nur_zusammenfassen": false,
-      "max_seiten": 500,
-      "_offen": "Adresse der öffentlichen Serhendi Seite hier eintragen"
     }
   ]
 }

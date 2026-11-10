@@ -2,7 +2,7 @@
 
 Arbeitsname SeydaAI (Name noch offen zwischen SeydaAI und EhliSunnahAI). Nur für den internen Test durch Anil, nicht öffentlich. Betreiber: Verein Reyhani Europa e.V.
 
-Der Bot beantwortet Fragen ausschließlich aus eingelesenen öffentlichen Seiten von Diyanet (Din İşleri Yüksek Kurulu), TDV İslâm Ansiklopedisi und Semerkand einschließlich Serhendi. Jede Antwort nennt ihre Quellen mit Link. Findet er nichts, sagt er das.
+Der Bot beantwortet Fragen ausschließlich aus eingelesenen öffentlichen Seiten von Diyanet (Din İşleri Yüksek Kurulu), und TDV İslâm Ansiklopedisi. Jede Antwort nennt ihre Quellen mit Link. Findet er nichts, sagt er das.
 
 ## So funktioniert es
 
@@ -60,7 +60,7 @@ python einlesen.py
 
 oder nur eine Quelle, zum Beispiel `python einlesen.py diyanet`. Bei zwei Sekunden Pause pro Seite dauert Diyanet (bis 1500 Seiten) geschätzt bis zu 75 Minuten, alle Quellen zusammen bis zu zwei Stunden. Abbrechen mit Strg+C ist jederzeit möglich: Inhaltsseiten, die in den letzten 30 Tagen nach denselben Regeln gespeichert wurden, ruft der nächste Lauf nicht noch einmal ab. Übersichtsseiten, aus denen er Links sammelt, liest er neu, damit er findet, was noch fehlt. `python einlesen.py --neu` holt alles frisch.
 
-Seiten, die nach anderen Regeln eingelesen wurden (also auch alle Seiten aus dem ersten Lauf mit Menü und Firmenseiten) oder nicht mehr zum Muster passen, entfernt das Skript zu Beginn. Ändert sich eine Regel einer Quelle in `quellen.json`, liest es diese Quelle deshalb neu ein; neue Startadressen oder ein höheres `max_seiten` lösen das nicht aus. `semerkand.com.tr` ist laut ihrer Startseite die Seite der Semerkand Medya Grubu ohne religiöse Texte (nachgelesen am 9. November 2026), deshalb sind Semerkand und Serhendi im Moment leer. Sobald die Adressen der Seiten mit den Texten feststehen, kommen sie in `quellen.json`.
+Seiten, die nach anderen Regeln eingelesen wurden (also auch alle Seiten aus dem ersten Lauf mit Menü und Firmenseiten) oder nicht mehr zum Muster passen, entfernt das Skript zu Beginn. Ändert sich eine Regel einer Quelle in `quellen.json`, liest es diese Quelle deshalb neu ein; neue Startadressen oder ein höheres `max_seiten` lösen das nicht aus. Semerkand und Serhendi sind seit dem 10. November 2026 keine Quellen mehr. Seiten von Quellen, die nicht mehr in `quellen.json` stehen, löscht SeydaAI samt ihren Abschnitten beim Einlesen, beim Start und beim Prüfset; danach tauchen sie in keiner Antwort mehr auf.
 
 ## Prüfset
 
