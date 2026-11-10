@@ -1,0 +1,19 @@
+{
+  "name": "seydaai-cloudflare",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SeydaAI als Cloudflare Worker mit D1 Datenbank",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "1.6.0"
+  },
+  "devDependencies": {
+    "wrangler": "4.158.0"
+  }
+}

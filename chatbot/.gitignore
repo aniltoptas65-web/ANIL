@@ -1,0 +1,5 @@
+seyda.db
+__pycache__/
+.env
+.venv/
+pruefbericht_*.md

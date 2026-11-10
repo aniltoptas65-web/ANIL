@@ -1,0 +1,1250 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#8B1014">
+<title>SeydaAI</title>
+<!-- Oberfläche nach Entwurf 1 "Klassisch" mit grünem Online Punkt (Wahl von Anil, 9. November 2026).
+     Zuerst für das Handy gebaut (Wunsch von Anil, 10. November 2026), am PC mit fester Seitenleiste. -->
+<style>
+/* Schriften liegen lokal in web/schriften (SIL Open Font License, Lizenztexte daneben), damit kein Aufruf an Google Server geht.
+   latin enthält ı, latin ext enthält ğ ş İ für türkische Texte. */
+@font-face{font-family:"Cormorant Garamond";font-style:normal;font-weight:700;font-display:swap;src:url(/schriften/cormorant-garamond-latin-ext-700-normal.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Cormorant Garamond";font-style:normal;font-weight:700;font-display:swap;src:url(/schriften/cormorant-garamond-latin-700-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Source Sans 3";font-style:normal;font-weight:400;font-display:swap;src:url(/schriften/source-sans-3-latin-ext-400-normal.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C4,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Source Sans 3";font-style:normal;font-weight:400;font-display:swap;src:url(/schriften/source-sans-3-latin-400-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Source Sans 3";font-style:normal;font-weight:600;font-display:swap;src:url(/schriften/source-sans-3-latin-ext-600-normal.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C4,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Source Sans 3";font-style:normal;font-weight:600;font-display:swap;src:url(/schriften/source-sans-3-latin-600-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+:root{--bordeaux:#8B1014;--oliv:#3D5C1E;--creme:#F8F4EE;--sand:#EBE2D4;--rand:#DCCFBC;--text:#2A2320;--leise:#5C5248;--knopfrand:#C9B9A3;--leiste:300px}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;background:var(--creme);color:var(--text);font-family:"Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.5}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.app{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh;min-width:0}
+
+/* Kopf */
+header{position:sticky;top:0;z-index:10;background:var(--bordeaux);color:#fff;padding:10px max(16px,env(safe-area-inset-right)) 10px max(16px,env(safe-area-inset-left));padding-top:max(10px,env(safe-area-inset-top))}
+.marke{display:flex;align-items:center;gap:8px}
+.logo{background:var(--creme);border-radius:9px;padding:4px 8px;display:flex;align-items:center;flex-shrink:0}
+.logo img{display:block;height:32px;width:auto}
+header h1{margin:0;font-family:"Cormorant Garamond",Georgia,serif;font-size:26px;line-height:1.1;font-weight:700;letter-spacing:.5px;white-space:nowrap}
+.punkt{width:11px;height:11px;border-radius:6px;background:#3DDC84;box-shadow:0 0 0 2px #fff;flex-shrink:0}
+.punkt.aus{background:#9A8F86}
+.unterkopf{background:var(--bordeaux);color:#F3E3E3;font-size:13px;padding:0 16px 10px;margin:0}
+.symbol{width:40px;height:40px;border:none;border-radius:20px;background:transparent;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0}
+.symbol:hover,.symbol:focus-visible{background:rgba(255,255,255,.14)}
+.symbol:focus-visible{outline:2px solid #fff;outline-offset:1px}
+.rechts{margin-left:auto;display:flex;gap:2px}
+.hinweis{background:var(--sand);padding:8px 16px;font-size:13px;color:#4A3F35}
+
+/* Gespräch */
+main{flex:1;width:100%;max-width:760px;margin:0 auto;padding:16px 12px 8px;display:flex;flex-direction:column;gap:14px}
+.frage{align-self:flex-end;max-width:88%;background:#fff;border:1px solid var(--rand);border-radius:16px 16px 4px 16px;padding:10px 14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.antwort{background:#fff;border:1px solid var(--rand);border-radius:16px 16px 16px 4px;padding:14px 14px 12px;display:flex;flex-direction:column;gap:12px;scroll-margin-top:calc(72px + env(safe-area-inset-top));min-width:0}
+.antwort .ki{font-size:12px;color:var(--leise);letter-spacing:.3px}
+.inhalt{line-height:1.6;overflow-wrap:anywhere}
+.inhalt p{margin:0 0 10px}
+.inhalt p:last-child,.inhalt ol:last-child,.inhalt ul:last-child{margin-bottom:0}
+.inhalt ol,.inhalt ul{margin:0 0 10px;padding-left:24px}
+.inhalt li{margin:0 0 8px;padding-left:2px}
+.inhalt li::marker{color:var(--bordeaux);font-weight:600}
+.inhalt strong{font-weight:600;color:#1E1916}
+.inhalt .zwischentitel{font-weight:600;margin-top:4px}
+sup.beleg{font-size:11px;line-height:0;color:var(--oliv);font-weight:600;margin-left:2px;white-space:nowrap}
+.zusatz{border-left:3px solid var(--sand);padding:2px 0 2px 10px;font-size:14px;color:var(--leise)}
+.zusatz p{margin:0 0 4px}
+.zusatz p:last-child{margin:0}
+.quellen{border-top:1px solid var(--sand);padding-top:10px}
+.quellen span{display:block;font-size:12px;font-weight:600;color:var(--oliv);letter-spacing:.4px;margin-bottom:4px}
+.quellen ol{margin:0;padding-left:22px;font-size:15px}
+.quellen li{margin:0 0 6px}
+.quellen li::marker{color:var(--oliv);font-size:13px;font-weight:600}
+.quellen a{color:var(--bordeaux);overflow-wrap:anywhere}
+.knoepfe{display:flex;flex-wrap:wrap;gap:8px}
+.melden,.vorlesen{min-height:44px;padding:0 16px;border:1px solid var(--knopfrand);background:transparent;border-radius:22px;font-size:15px;color:#4A3F35;display:inline-flex;align-items:center;gap:6px}
+.vorlesen[aria-pressed="true"]{background:var(--oliv);border-color:var(--oliv);color:#fff}
+.fehler{color:var(--bordeaux)}
+.warten{flex-direction:row;align-items:center;gap:10px;color:var(--leise)}
+.punkte{display:inline-flex;gap:4px}
+.punkte i{width:7px;height:7px;border-radius:4px;background:var(--bordeaux);opacity:.3;animation:puls 1.2s infinite}
+.punkte i:nth-child(2){animation-delay:.2s}.punkte i:nth-child(3){animation-delay:.4s}
+@keyframes puls{50%{opacity:1}}
+.willkommen{background:#fff;border:1px solid var(--rand);border-radius:16px;padding:18px 16px}
+.willkommen h2{margin:0 0 6px;font-family:"Cormorant Garamond",Georgia,serif;font-size:24px;color:var(--bordeaux)}
+.willkommen p{margin:0 0 12px;color:var(--leise);font-size:15px}
+.beispiele{display:flex;flex-direction:column;gap:8px}
+.beispiele button{min-height:44px;text-align:left;padding:8px 14px;border:1px solid var(--knopfrand);border-radius:14px;background:var(--creme);font-size:15px}
+
+/* Eingabe */
+form.eingabe{position:sticky;bottom:0;background:var(--creme);border-top:1px solid var(--rand);padding:10px max(12px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}
+.zeile{max-width:736px;margin:0 auto;display:flex;gap:8px}
+#eingabe{flex:1;min-width:0;min-height:48px;border:1px solid var(--knopfrand);border-radius:24px;padding:0 16px;font-size:16px;background:#fff;text-overflow:ellipsis}
+button.senden,button.mikro{width:48px;height:48px;border:none;border-radius:24px;background:var(--bordeaux);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0}
+button.mikro{background:#fff;color:var(--bordeaux);border:1px solid var(--knopfrand)}
+button.mikro.an{background:var(--oliv);color:#fff;border-color:var(--oliv)}
+.unterzeile{max-width:736px;margin:6px auto 0;display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;font-size:13px;color:var(--leise)}
+.sprachwahl{display:flex;align-items:center;gap:4px}
+.sprachwahl button{min-height:34px;padding:0 12px;border:1px solid var(--knopfrand);background:#fff;border-radius:17px;font-size:13px;color:#4A3F35}
+.sprachwahl button[aria-pressed="true"]{background:var(--oliv);border-color:var(--oliv);color:#fff}
+
+/* Seitenleiste mit früheren Unterhaltungen: auf dem Handy ein Menü, am PC fest links */
+.seitenleiste{position:fixed;z-index:30;top:0;bottom:0;left:0;width:min(86vw,var(--leiste));background:#fff;border-right:1px solid var(--rand);display:flex;flex-direction:column;transform:translateX(-102%);transition:transform .22s ease,visibility 0s linear .22s;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);visibility:hidden}
+.seitenleiste.offen{transform:none;visibility:visible;transition:transform .22s ease,visibility 0s}
+.abdeckung{position:fixed;inset:0;z-index:20;background:rgba(30,20,15,.4)}
+.leiste-kopf{display:flex;align-items:center;gap:8px;padding:12px}
+.neu{flex:1;min-height:44px;border:1px solid var(--knopfrand);border-radius:22px;background:var(--creme);display:flex;align-items:center;justify-content:center;gap:8px;font-weight:600;color:var(--bordeaux)}
+.leiste-zu{width:44px;height:44px;border:none;background:transparent;border-radius:22px;display:flex;align-items:center;justify-content:center;color:var(--leise)}
+.leiste-titel{margin:4px 16px 6px;font-size:12px;font-weight:600;letter-spacing:.4px;color:var(--oliv)}
+.chatliste{list-style:none;margin:0;padding:0 8px;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
+.chatliste li{display:flex;align-items:stretch;border-radius:12px;margin-bottom:2px}
+.chatliste li.aktiv{background:var(--sand)}
+.chatliste .oeffnen{flex:1;min-width:0;min-height:52px;border:none;background:transparent;text-align:left;padding:8px 10px;border-radius:12px;display:flex;flex-direction:column;justify-content:center}
+.chatliste .oeffnen span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:15px}
+.chatliste .oeffnen small{font-size:12px;color:var(--leise)}
+.chatliste .loeschen{width:44px;border:none;background:transparent;border-radius:12px;color:var(--leise);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.chatliste .loeschen:hover,.chatliste .oeffnen:hover{background:rgba(139,16,20,.06)}
+.leer{margin:4px 16px;color:var(--leise);font-size:14px}
+.leiste-fuss{border-top:1px solid var(--sand);padding:10px 16px 12px;font-size:12px;color:var(--leise)}
+.leiste-fuss p{margin:0 0 8px}
+.leiste-fuss button{min-height:40px;padding:0 14px;border:1px solid var(--knopfrand);border-radius:20px;background:transparent;font-size:13px;color:#4A3F35}
+
+/* Einstellungen */
+dialog{border:none;border-radius:18px;padding:0;width:min(94vw,460px);max-height:90dvh;color:var(--text);background:#fff}
+dialog::backdrop{background:rgba(30,20,15,.45)}
+.dialog{padding:18px 18px 16px;display:flex;flex-direction:column;gap:8px}
+.dialog h2{margin:0 0 4px;font-family:"Cormorant Garamond",Georgia,serif;font-size:26px;color:var(--bordeaux)}
+.dialog h3{margin:6px 0 0;font-size:13px;letter-spacing:.4px;color:var(--oliv)}
+.dialog label{font-size:14px;color:var(--leise)}
+.dialog select{width:100%;min-height:46px;border:1px solid var(--knopfrand);border-radius:12px;background:#fff;padding:0 10px;font-size:16px}
+.reihe{display:flex;gap:8px}
+.reihe select{flex:1;min-width:0}
+.probe,.fertig{min-height:46px;padding:0 16px;border:1px solid var(--knopfrand);border-radius:23px;background:var(--creme)}
+.fertig{background:var(--bordeaux);border-color:var(--bordeaux);color:#fff;align-self:flex-end;margin-top:6px;padding:0 24px}
+.schalter{display:flex;gap:10px;align-items:flex-start;margin-top:6px}
+.schalter input{width:22px;height:22px;margin:1px 0 0;flex-shrink:0;accent-color:var(--oliv)}
+.leise{color:var(--leise);font-size:13px;margin:0}
+
+/* Anmeldung mit Name und Zugangscode (nur auf Cloudflare; am Rechner fragt der Browser selbst nach dem Passwort) */
+.anmeldung{position:fixed;inset:0;z-index:50;background:var(--creme);overflow-y:auto;display:flex;flex-direction:column;align-items:center;padding:max(20px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+.anmeldung form{width:100%;max-width:400px;margin:auto 0;background:#fff;border:1px solid var(--rand);border-radius:18px;padding:20px 18px 18px;display:flex;flex-direction:column;gap:8px}
+.anmeldung .logo{align-self:center;background:var(--creme);border:1px solid var(--rand);border-radius:14px;padding:8px 14px}
+.anmeldung .logo img{height:40px}
+.anmeldung h2{margin:4px 0 0;text-align:center;font-family:"Cormorant Garamond",Georgia,serif;font-size:30px;color:var(--bordeaux)}
+.anmeldung label{font-size:14px;color:var(--leise);margin-top:4px}
+.anmeldung input{min-height:48px;border:1px solid var(--knopfrand);border-radius:12px;padding:0 14px;font-size:16px;background:#fff;width:100%}
+.anmeldung button[type=submit]{min-height:48px;border:none;border-radius:24px;background:var(--bordeaux);color:#fff;font-weight:600;font-size:16px;margin-top:4px}
+#anmelde-fehler{color:var(--bordeaux);font-size:14px;margin:0;min-height:1.3em}
+
+[hidden]{display:none!important}
+button:disabled,button.wartet{opacity:.6;cursor:default}
+.unsichtbar{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* Kleine Handys */
+@media (max-width:380px){
+  header{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(8px,env(safe-area-inset-right))}
+  .marke{gap:6px}
+  .logo{padding:3px 6px}
+  .logo img{height:26px}
+  header h1{font-size:22px}
+  .symbol{width:36px;height:36px}
+  .unterkopf{font-size:12px;padding-left:10px}
+  main{padding-left:8px;padding-right:8px}
+  .antwort{padding:12px 12px 10px}
+}
+/* PC und Tablet quer: Seitenleiste fest links */
+@media (max-width:300px){
+  #neu-oben{display:none}
+}
+@media (min-width:900px){
+  body{display:flex}
+  .seitenleiste{position:sticky;top:0;height:100vh;height:100dvh;transform:none;visibility:visible;transition:none;flex-shrink:0;width:var(--leiste)}
+  .abdeckung,#menu,.leiste-zu,#neu-oben{display:none!important}
+  .app{flex:1}
+  header{padding-left:24px;padding-right:20px}
+  .unterkopf{padding-left:24px}
+  main{padding:24px 20px 12px;gap:16px}
+  .antwort{padding:18px 18px 14px}
+}
+@media (prefers-reduced-motion:reduce){
+  .seitenleiste{transition:none}
+  .punkte i{animation:none;opacity:.7}
+}
+</style>
+</head>
+<body>
+<aside id="seitenleiste" class="seitenleiste" aria-label="Unterhaltungen">
+  <div class="leiste-kopf">
+    <button id="neu" class="neu" type="button"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Neuer Chat</button>
+    <button id="leiste-zu" class="leiste-zu" type="button" aria-label="Menü schließen"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <p class="leiste-titel">FRÜHERE UNTERHALTUNGEN</p>
+  <ul id="chatliste" class="chatliste"></ul>
+  <p id="chatleer" class="leer">Noch keine Unterhaltungen.</p>
+  <div class="leiste-fuss">
+    <p id="speicherhinweis">Der Verlauf liegt nur auf diesem Gerät.</p>
+    <button id="alle-loeschen" type="button">Alle löschen</button>
+  </div>
+</aside>
+<div id="abdeckung" class="abdeckung" hidden></div>
+
+<div class="app">
+<header>
+  <div class="marke">
+    <button id="menu" class="symbol" type="button" aria-label="Frühere Unterhaltungen" aria-controls="seitenleiste" aria-expanded="false"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    <span class="logo"><img src="/reyhani_logo.png" alt="Reyhani Europa" width="81" height="40"></span>
+    <span id="punkt" class="punkt" role="img" aria-label="Online" title="Online"></span>
+    <h1>SeydaAI</h1>
+    <div class="rechts">
+      <button id="neu-oben" class="symbol" type="button" aria-label="Neuer Chat" title="Neuer Chat"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+      <button id="zahnrad" class="symbol" type="button" aria-label="Einstellungen" title="Einstellungen"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+    </div>
+  </div>
+</header>
+<p class="unterkopf">Antworten aus Diyanet und TDV</p>
+<div class="hinweis">Hier antwortet eine KI. Sie kann sich irren und ersetzt keinen Gelehrten. Interner Test.</div>
+<main id="verlauf" aria-live="polite"></main>
+<form id="formular" class="eingabe">
+  <div class="zeile">
+    <label for="eingabe" class="unsichtbar">Deine Frage</label>
+    <input id="eingabe" type="text" maxlength="1000" autocomplete="off" enterkeyhint="send" placeholder="Frage auf Deutsch oder Türkisch">
+    <button id="mikro" class="mikro" type="button" aria-label="Frage einsprechen" title="Frage einsprechen" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+    <button class="senden" type="submit" aria-label="Frage senden"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+  </div>
+  <div class="unterzeile"><div id="sprachwahl" class="sprachwahl" hidden>
+      <span>Mikrofon:</span>
+      <button type="button" data-sprache="de-DE" aria-pressed="true">Deutsch</button>
+      <button type="button" data-sprache="tr-TR" aria-pressed="false">Türkçe</button>
+    </div><span id="sprachstatus" aria-live="polite"></span></div>
+</form>
+</div>
+
+<dialog id="einstellungen" aria-labelledby="einst-titel">
+  <form method="dialog" class="dialog">
+    <h2 id="einst-titel">Einstellungen</h2>
+    <h3>VORLESEN</h3>
+    <label for="stimme-de">Stimme Deutsch</label>
+    <div class="reihe"><select id="stimme-de"></select><button type="button" class="probe" data-probe="de">Probe</button></div>
+    <label for="stimme-tr">Stimme Türkisch</label>
+    <div class="reihe"><select id="stimme-tr"></select><button type="button" class="probe" data-probe="tr">Probe</button></div>
+    <label for="tempo">Tempo</label>
+    <select id="tempo">
+      <option value="0.8">Langsam</option>
+      <option value="0.9">Etwas langsamer (Standard)</option>
+      <option value="1">Normal</option>
+    </select>
+    <label class="schalter"><input type="checkbox" id="online"><span>Onlinestimmen erlauben. Sie klingen meist deutlicher; der vorgelesene Text geht dann an den Anbieter der Stimme, zum Beispiel Microsoft oder Google.</span></label>
+    <p id="stimmen-hinweis" class="leise"></p>
+    <h3>VERLAUF</h3>
+    <label class="schalter"><input type="checkbox" id="verlauf-an"><span>Unterhaltungen auf diesem Gerät speichern. Auf einem Gerät, das mehrere Personen benutzen, besser ausschalten.</span></label>
+    <div id="konto" hidden>
+      <h3>ANMELDUNG</h3>
+      <p id="konto-name" class="leise"></p>
+      <button type="button" id="abmelden" class="probe">Abmelden</button>
+    </div>
+    <button class="fertig" value="ok">Fertig</button>
+  </form>
+</dialog>
+
+<div id="anmeldung" class="anmeldung" role="dialog" aria-modal="true" aria-labelledby="anmelde-titel" hidden>
+  <form id="anmelde-form" novalidate>
+    <span class="logo"><img src="/reyhani_logo.png" alt="Reyhani Europa" width="81" height="40"></span>
+    <h2 id="anmelde-titel">SeydaAI</h2>
+    <p class="leise">Bitte melde dich mit deinem Namen und deinem Zugangscode an. Den Code bekommst du vom Verein.</p>
+    <label for="anmelde-name">Name</label>
+    <input id="anmelde-name" name="username" autocomplete="username" autocapitalize="words" autocorrect="off" spellcheck="false" maxlength="40">
+    <label for="anmelde-code">Zugangscode</label>
+    <input id="anmelde-code" name="password" type="password" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="60">
+    <p id="anmelde-fehler" role="alert"></p>
+    <button type="submit">Anmelden</button>
+    <p class="leise">Du bleibst 30 Tage angemeldet. Auf einem fremden Gerät meldest du dich danach in den Einstellungen wieder ab und löschst dabei den Verlauf.</p>
+  </form>
+</div>
+
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const verlauf = $("verlauf");
+const formular = $("formular");
+const eingabe = $("eingabe");
+const knopf = formular.querySelector("button.senden");
+const punkt = $("punkt");
+const mikro = $("mikro");
+const sprachwahl = $("sprachwahl");
+const sprachstatus = $("sprachstatus");
+const leiste = $("seitenleiste");
+const abdeckung = $("abdeckung");
+const menu = $("menu");
+const dialog = $("einstellungen");
+const passt = (q) => !!(window.matchMedia && window.matchMedia(q).matches);
+// Auf Touchgeräten schließt sich die Tastatur nach dem Senden, damit die Antwort Platz hat
+const beruehrung = passt("(pointer: coarse)");
+const bewegung = passt("(prefers-reduced-motion: reduce)") ? "auto" : "smooth";
+
+// Kleine Einstellungen auf dem Gerät merken (kann in privaten Fenstern fehlen)
+function merken(name, wert) { try { localStorage.setItem(name, wert); return true; } catch (e) { return false; } }
+function gemerkt(name) { try { return localStorage.getItem(name); } catch (e) { return null; } }
+function vergessen(name) { try { localStorage.removeItem(name); } catch (e) {} }
+
+// Grüner Punkt, solange der Server antwortet; grau, wenn keine Verbindung besteht
+function status(online) {
+  punkt.classList.toggle("aus", !online);
+  const text = online ? "Online" : "Offline";
+  punkt.setAttribute("aria-label", text); punkt.title = text;
+}
+async function pruefen() {
+  try {
+    const r = await fetch("/api/status", {cache: "no-store"});
+    const d = await r.json().catch(() => ({}));
+    status(r.ok || !!d.anmelden);
+    // Ist das Anmeldefenster schon offen, bleibt eine Fehlermeldung darin stehen
+    if (r.status === 401 && d.anmelden) { if (anmeldung.hidden) anmeldungZeigen(); }
+    else if (r.ok) kontoZeigen(d);
+  } catch (e) { status(false); }
+}
+
+// ---------- Anmeldung (nur auf Cloudflare) ----------
+// Der Server antwortet dort mit 401 und {"anmelden": true}. Am Rechner (server.py) fragt der Browser selbst.
+const anmeldung = $("anmeldung");
+const anmeldeForm = $("anmelde-form");
+const anmeldeFehler = $("anmelde-fehler");
+// Name der aktuellen Sitzung, damit er nach Ablauf der Sitzung schon eingetragen ist (nur im Speicher der Seite)
+let bekannterName = "";
+function hintergrundSperren(an) {
+  for (const e of [document.querySelector(".app"), leiste]) { if (an) e.setAttribute("inert", ""); else e.removeAttribute("inert"); }
+}
+function anmeldungZeigen(text) {
+  if (dialog.open) dialog.close();
+  anmeldeFehler.textContent = text || "";
+  if (!$("anmelde-name").value && bekannterName) $("anmelde-name").value = bekannterName;
+  if (!anmeldung.hidden) return;
+  anmeldung.hidden = false;
+  hintergrundSperren(true);
+  const feld = $("anmelde-name").value ? $("anmelde-code") : $("anmelde-name");
+  setTimeout(() => feld.focus(), 0);
+}
+function kontoZeigen(d) {
+  bekannterName = d && d.name ? d.name : "";
+  $("konto").hidden = !(d && d.sitzung);
+  $("konto-name").textContent = d && d.name ? "Angemeldet als " + d.name + "." : "";
+}
+anmeldeForm.addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const name = $("anmelde-name").value.trim();
+  const code = $("anmelde-code").value.trim();
+  if (!name || !code) { anmeldeFehler.textContent = "Bitte Name und Zugangscode eingeben."; return; }
+  const absenden = anmeldeForm.querySelector("button[type=submit]");
+  absenden.disabled = true;
+  anmeldeFehler.textContent = "";
+  try {
+    const r = await fetch("/api/anmelden", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({name, code})});
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) { anmeldeFehler.textContent = d.fehler || "Die Anmeldung hat nicht geklappt."; return; }
+    $("anmelde-code").value = "";
+    anmeldung.hidden = true;
+    hintergrundSperren(false);
+    kontoZeigen({sitzung: true, name: d.name});
+    status(true);
+    if (!beruehrung) eingabe.focus({preventScroll: true});
+  } catch (e) {
+    anmeldeFehler.textContent = "Keine Verbindung zum Server.";
+  } finally {
+    absenden.disabled = false;
+  }
+});
+$("abmelden").onclick = async () => {
+  let ok = false;
+  try {
+    const r = await fetch("/api/abmelden", {method: "POST", headers: {"Content-Type": "application/json"}, body: "{}"});
+    ok = r.ok;
+  } catch (e) {}
+  if (!ok) {
+    $("konto-name").textContent = "Abmelden hat nicht geklappt. Bitte mit Internetverbindung noch einmal versuchen.";
+    return;
+  }
+  // Der Verlauf liegt auf dem Gerät und bleibt sonst für die nächste Person sichtbar
+  if ((chats.length || verlauf.querySelector(".frage")) &&
+      confirm("Auch den Chatverlauf auf diesem Gerät löschen? Auf einem fremden oder geteilten Gerät bitte ja.")) alleLoeschen();
+  kontoZeigen(null);
+  $("anmelde-name").value = "";
+  anmeldungZeigen("Du bist abgemeldet.");
+};
+// Nur prüfen, solange die Seite sichtbar ist: spart Anfragen (auf Cloudflare zählt jede zum Tageskontingent)
+pruefen();
+setInterval(() => { if (document.visibilityState === "visible") pruefen(); }, 60000);
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") pruefen(); });
+
+function el(tag, klasse, text) {
+  const e = document.createElement(tag);
+  if (klasse) e.className = klasse;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+function svg(pfad) {
+  const s = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  s.setAttribute("width", "18"); s.setAttribute("height", "18"); s.setAttribute("viewBox", "0 0 24 24");
+  s.setAttribute("fill", "none"); s.setAttribute("stroke", "currentColor"); s.setAttribute("stroke-width", "2");
+  s.setAttribute("aria-hidden", "true");
+  const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  p.setAttribute("d", pfad); s.appendChild(p);
+  return s;
+}
+const ICON_LAUT = "M11 5L6 9H3v6h3l5 4zM15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13";
+const ICON_STOPP = "M7 7h10v10H7z";
+const ICON_MUELL = "M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3";
+
+// Scrollen: nach dem Senden ans Ende, bei der Antwort an ihren Anfang (bei kurzen Antworten ist das ebenfalls das Ende)
+function nachUnten() { requestAnimationFrame(() => window.scrollTo({top: document.documentElement.scrollHeight, behavior: bewegung})); }
+function zeigen(element) { requestAnimationFrame(() => element.scrollIntoView({behavior: bewegung, block: "start"})); }
+
+// ---------- Antwort gegliedert anzeigen ----------
+// Belegmarken stehen am Ende jeder Zeile, deren Text aus einer Quelle stammt. Die Nummern passen zur Quellenliste.
+const MARKE_AUF = "", MARKE_ZU = "";
+function textMitBelegen(teile) {
+  let aus = "", offen = [];
+  const schliessen = () => {
+    if (!offen.length) return;
+    aus = aus.replace(/[ \t]+$/, "") + MARKE_AUF + offen.sort((a, b) => a - b).map(n => n + 1).join(",") + MARKE_ZU;
+    offen = [];
+  };
+  for (const t of teile) {
+    const text = typeof t.text === "string" ? t.text.replace(/[]/g, "") : "";
+    const belege = Array.isArray(t.belege) ? t.belege.filter(n => Number.isInteger(n) && n >= 0) : [];
+    text.split("\n").forEach((stueck, i) => {
+      if (i > 0) { schliessen(); aus += "\n"; }
+      aus += stueck;
+      if (stueck.trim()) for (const b of belege) if (!offen.includes(b)) offen.push(b);
+    });
+  }
+  schliessen();
+  return aus;
+}
+function inline(ziel, text) {
+  // Erlaubt sind nur **fett** und Belegmarken; alles andere bleibt reiner Text (kein HTML aus der Antwort)
+  for (const stueck of text.split(/(\*\*[^*\n]+\*\*|[\d,]+)/)) {
+    if (!stueck) continue;
+    if (stueck.startsWith("**") && stueck.endsWith("**") && stueck.length > 4) {
+      ziel.appendChild(el("strong", "", stueck.slice(2, -2)));
+    } else if (stueck[0] === MARKE_AUF) {
+      const nummern = stueck.slice(1, -1).split(",");
+      const s = el("sup", "beleg", nummern.join(", "));
+      s.title = "Quelle " + nummern.join(", ");
+      ziel.appendChild(el("span", "unsichtbar", " Quelle "));
+      ziel.appendChild(s);
+    } else {
+      ziel.appendChild(document.createTextNode(stueck.replace(/\*\*/g, "")));
+    }
+  }
+}
+function gliedern(text) {
+  const box = el("div", "inhalt");
+  let liste = null, absatz = null, punkt = null;
+  for (const roh of String(text).replace(/\r/g, "").split("\n")) {
+    const zeile = roh.trim();
+    if (!zeile) { absatz = null; continue; }
+    let m;
+    let nummeriert = false;
+    if ((m = zeile.match(/^(\d{1,2})[.)]\s+(.*)$/)) || (m = zeile.match(/^[-*•]\s+(.*)$/))) {
+      nummeriert = m.length === 3;
+      const art = nummeriert ? "OL" : "UL";
+      const nummer = nummeriert ? parseInt(m[1], 10) : 0;
+      // Eine Liste läuft weiter, auch wenn ein ausgeblendeter Punkt eine kleine Lücke lässt (1, 3)
+      const letzte = liste ? Number(liste.dataset.letzte || 0) : 0;
+      const weiter = liste && liste.tagName === art && (!nummeriert || (nummer > letzte && nummer <= letzte + 3));
+      // Eine neue nummerierte Liste beginnt mit 1, oder mit 2 oder 3, wenn ein fettes Stichwort folgt.
+      // "15. yüzyılda" am Zeilenanfang bleibt so normaler Text.
+      const anfang = nummer === 1 || (nummer <= 3 && /^\*\*/.test(nummeriert ? m[2] : ""));
+      if (nummeriert && !weiter && !anfang) m = null;
+      else if (!weiter) {
+        liste = el(art.toLowerCase());
+        box.appendChild(liste);
+      }
+      if (m && nummeriert) liste.dataset.letzte = String(nummer);
+    }
+    if (m) {
+      punkt = el("li");
+      if (nummeriert) punkt.value = parseInt(m[1], 10);  // Nummer wie im Text, auch nach einer Lücke
+      inline(punkt, nummeriert ? m[2] : m[1]);
+      liste.appendChild(punkt);
+      absatz = null;
+      continue;
+    }
+    if ((m = zeile.match(/^#{1,6}\s+(.*)$/))) {
+      const t = el("p", "zwischentitel"); inline(t, m[1]); box.appendChild(t);
+      liste = null; absatz = null; punkt = null;
+      continue;
+    }
+    if (punkt && /^\s{2,}/.test(roh) && absatz === null) {
+      // eingerückte Fortsetzung eines Listenpunkts
+      punkt.appendChild(document.createElement("br")); inline(punkt, zeile);
+      continue;
+    }
+    liste = null; punkt = null;
+    if (!absatz) { absatz = el("p"); box.appendChild(absatz); }
+    else absatz.appendChild(document.createElement("br"));
+    inline(absatz, zeile);
+  }
+  return box;
+}
+function vorleseText(daten) {
+  if (Array.isArray(daten.teile) && daten.teile.length) {
+    return daten.teile.map(t => (typeof t.text === "string" ? t.text : "")).join("") + "\n" + (daten.verweis || "");
+  }
+  return daten.antwort || "";
+}
+
+function antwortZeigen(frage, daten) {
+  const box = el("article", "antwort");
+  box.appendChild(el("div", "ki", "KI Antwort"));
+  const gegliedert = Array.isArray(daten.teile) && daten.teile.length > 0;
+  box.appendChild(gliedern(gegliedert ? textMitBelegen(daten.teile) : (daten.antwort || "")));
+  const zusatz = [daten.verweis, ...(Array.isArray(daten.hinweise) ? daten.hinweise : [])].filter(t => typeof t === "string" && t);
+  if (gegliedert && zusatz.length) {
+    const z = el("div", "zusatz");
+    for (const t of zusatz) z.appendChild(el("p", "", t));
+    box.appendChild(z);
+  }
+  if (Array.isArray(daten.quellen) && daten.quellen.length) {
+    const q = el("div", "quellen");
+    q.appendChild(el("span", "", "QUELLEN"));
+    const ol = el("ol");
+    for (const s of daten.quellen) {
+      const li = el("li");
+      const a = el("a", "", (s.quelle || "") + ": " + (s.titel || s.url || ""));
+      if (typeof s.url === "string" && /^https:\/\//.test(s.url)) { a.href = s.url; a.target = "_blank"; a.rel = "noopener"; }
+      li.appendChild(a); ol.appendChild(li);
+    }
+    q.appendChild(ol);
+    box.appendChild(q);
+  }
+  const knoepfe = el("div", "knoepfe");
+  if (tts) knoepfe.appendChild(vorleseKnopf(vorleseText(daten), daten.sprache));
+  const melden = el("button", "melden", "Antwort melden");
+  melden.type = "button";
+  melden.onclick = async () => {
+    const notiz = prompt("Was stimmt an der Antwort nicht? (optional)");
+    if (notiz === null) return;
+    try {
+      const r = await fetch("/api/melden", {method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({frage, antwort: daten.antwort, quellen: daten.quellen, notiz})});
+      if (r.status === 401) {
+        const d = await r.json().catch(() => ({}));
+        if (d.anmelden) anmeldungZeigen("Bitte melde dich an und melde die Antwort dann noch einmal.");
+      }
+      if (!r.ok) throw new Error();
+      melden.textContent = "Gemeldet, danke"; melden.disabled = true;
+    } catch (e) {
+      melden.textContent = "Melden fehlgeschlagen, nochmal versuchen";
+    }
+  };
+  knoepfe.appendChild(melden);
+  box.appendChild(knoepfe);
+  verlauf.appendChild(box);
+  return box;
+}
+
+// ---------- Chatverlauf ----------
+// Liegt nur auf diesem Gerät (Speicher der Seite). Mit dem Hosting kommt ein Speicher auf dem Server dazu,
+// der dieselben zwei Aufgaben übernimmt: laden und sichern.
+const MAX_CHATS = 50, MAX_EINTRAEGE = 40;
+const liste = (x) => (Array.isArray(x) ? x : []);
+function sauberEintrag(e) {
+  // Gespeicherte Daten können alt, beschädigt oder von Hand verändert sein: nur gültige Teile übernehmen
+  if (!e || typeof e !== "object" || typeof e.frage !== "string" || !e.daten || typeof e.daten !== "object") return null;
+  const d = e.daten;
+  return {frage: e.frage, zeit: Number(e.zeit) || 0, daten: {
+    antwort: typeof d.antwort === "string" ? d.antwort : "",
+    teile: liste(d.teile).filter(t => t && typeof t === "object" && typeof t.text === "string"),
+    quellen: liste(d.quellen).filter(q => q && typeof q === "object"),
+    hinweise: liste(d.hinweise).filter(h => typeof h === "string"),
+    verweis: typeof d.verweis === "string" ? d.verweis : "",
+    sprache: d.sprache === "tr" ? "tr" : "de",
+    art: typeof d.art === "string" ? d.art : "",
+    abschnitte: liste(d.abschnitte).filter(n => Number.isInteger(n) && n > 0),
+  }};
+}
+const speicher = {
+  laden() {
+    try {
+      return liste(JSON.parse(gemerkt("seyda_chats") || "[]"))
+        .filter(c => c && typeof c === "object" && typeof c.id === "string")
+        .map(c => ({id: c.id, titel: typeof c.titel === "string" ? c.titel : "", zeit: Number(c.zeit) || 0,
+          eintraege: liste(c.eintraege).map(sauberEintrag).filter(Boolean)}))
+        .filter(c => c.eintraege.length);
+    } catch (e) { return []; }
+  },
+  sichern(alle) {
+    if (!alle.length) { vergessen("seyda_chats"); return []; }
+    let rest = alle.slice(0, MAX_CHATS);
+    while (rest.length) {
+      if (merken("seyda_chats", JSON.stringify(rest))) return rest;
+      rest = rest.slice(0, -1);  // Speicher voll: die älteste Unterhaltung fällt weg
+    }
+    return null;
+  },
+};
+const verlaufAn = () => gemerkt("seyda_verlauf") !== "aus";
+let chats = speicher.laden();   // neueste zuerst
+let aktiv = null;               // offene Unterhaltung; null, solange ein neuer Chat noch leer ist
+let laeuft = false;
+const ausstehend = new Map();   // Unterhaltung, deren Antwort gerade lädt: id -> Frage
+const geloescht = new Set();    // gelöschte Unterhaltungen, damit eine späte Antwort sie nicht zurückholt
+
+// Welche Unterhaltung offen ist, merkt sich die Seite nur bei eingeschaltetem Verlauf
+function aktivMerken(id) { if (verlaufAn() && id) merken("seyda_aktiv", id); else vergessen("seyda_aktiv"); }
+function neueId() {
+  // Reiner Zufall, ohne Uhrzeit: Die Nummer gelöschter Unterhaltungen bleibt eine Weile gespeichert (siehe unten)
+  try { return Array.from(crypto.getRandomValues(new Uint32Array(3)), n => n.toString(36)).join(""); }
+  catch (e) { return Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2); }
+}
+// Nummern gelöschter Unterhaltungen, damit andere Fenster sie nicht wieder speichern (nur Nummern, kein Inhalt)
+const MAX_GELOESCHT = 200;
+function geloeschteNummern() {
+  try { return liste(JSON.parse(gemerkt("seyda_geloescht") || "[]")).filter(x => typeof x === "string"); }
+  catch (e) { return []; }
+}
+function alsGeloeschtMerken(ids) {
+  for (const id of ids) geloescht.add(id);
+  if (!verlaufAn()) return;  // ohne Verlauf wird nichts gespeichert, auch keine Nummern
+  const alle = [...new Set([...geloeschteNummern(), ...ids])].slice(-MAX_GELOESCHT);
+  merken("seyda_geloescht", JSON.stringify(alle));
+}
+function kompakt(d) {
+  const k = {};
+  for (const f of ["antwort", "teile", "quellen", "hinweise", "verweis", "sprache", "art", "abschnitte"]) if (d[f] !== undefined) k[f] = d[f];
+  return k;
+}
+function speicherHinweis(text) {
+  $("speicherhinweis").textContent = text || (verlaufAn()
+    ? "Der Verlauf liegt nur auf diesem Gerät. Wer das Gerät benutzt, kann ihn sehen."
+    : "Der Verlauf wird auf diesem Gerät nicht gespeichert (Zahnrad).");
+}
+let gekuerzt = false;  // hat das letzte Zusammenführen die älteste Unterhaltung wegen der Höchstzahl weggelassen?
+function zusammenfuehren(eigene, gespeichert) {
+  // Je Unterhaltung gilt die neueste Fassung; gelöschte bleiben weg. So überschreibt ein Fenster nicht,
+  // was ein anderes kurz vorher gespeichert hat.
+  for (const id of geloeschteNummern()) geloescht.add(id);
+  const nach = new Map();
+  for (const c of [...eigene, ...gespeichert]) {
+    if (geloescht.has(c.id)) continue;
+    const da = nach.get(c.id);
+    if (!da || (c.zeit || 0) > (da.zeit || 0)) nach.set(c.id, c);
+  }
+  const ergebnis = [...nach.values()].sort((a, b) => (b.zeit || 0) - (a.zeit || 0));
+  if (aktiv && nach.has(aktiv.id)) aktiv = nach.get(aktiv.id);
+  gekuerzt = ergebnis.length > MAX_CHATS;
+  return ergebnis.slice(0, MAX_CHATS);
+}
+// leise: Zurückschreiben nach einer Änderung in einem anderen Fenster; dann keine Meldung außer bei einem Fehler
+function sichern(leise) {
+  if (!verlaufAn()) { if (!leise) speicherHinweis(); return; }
+  chats = zusammenfuehren(chats, speicher.laden());
+  const ueberGrenze = gekuerzt;
+  const ergebnis = speicher.sichern(chats);
+  if (ergebnis === null) {
+    speicherHinweis("Der Verlauf ließ sich nicht speichern: Speicher voll oder privater Modus. Ältere Unterhaltungen löschen hilft.");
+  } else if (ergebnis.length < chats.length) {
+    chats = ergebnis;
+    speicherHinweis("Der Speicher war voll, die älteste Unterhaltung ist weggefallen.");
+  } else if (!leise) {
+    speicherHinweis(ueberGrenze ? "Es bleiben höchstens " + MAX_CHATS + " Unterhaltungen gespeichert, die älteste ist weggefallen." : "");
+  }
+}
+function gespraechFuer(chat) {
+  // Die letzten drei beantworteten Fragen gehen für Rückfragen wie "nicht verstanden" mit, gekürzt wie auf dem Server
+  return (chat ? chat.eintraege : [])
+    .filter(e => e.daten && (e.daten.art === "antwort" || e.daten.art === "kein_treffer"))
+    .slice(-3)
+    .map(e => ({frage: String(e.frage).slice(0, 1000), antwort: String(e.daten.antwort || "").slice(0, 4000),
+      quellen: liste(e.daten.quellen).map(q => q && q.url).filter(u => typeof u === "string"),
+      abschnitte: liste(e.daten.abschnitte)}));
+}
+function datum(ms) {
+  const d = new Date(ms), heute = new Date();
+  const tage = Math.round((new Date(heute.toDateString()) - new Date(d.toDateString())) / 86400000);
+  if (tage === 0) return "heute, " + d.toLocaleTimeString("de-DE", {hour: "2-digit", minute: "2-digit"});
+  if (tage === 1) return "gestern";
+  return d.toLocaleDateString("de-DE", {day: "numeric", month: "short", year: d.getFullYear() === heute.getFullYear() ? undefined : "numeric"});
+}
+function listeZeigen() {
+  const ul = $("chatliste");
+  ul.textContent = "";
+  for (const c of chats) {
+    const li = el("li", aktiv && aktiv.id === c.id ? "aktiv" : "");
+    const auf = el("button", "oeffnen");
+    auf.type = "button";
+    auf.appendChild(el("span", "", c.titel || "Unterhaltung"));
+    auf.appendChild(el("small", "", datum(c.zeit || Date.now())));
+    if (aktiv && aktiv.id === c.id) auf.setAttribute("aria-current", "true");
+    auf.onclick = () => chatOeffnen(c.id);
+    const weg = el("button", "loeschen");
+    weg.type = "button";
+    weg.setAttribute("aria-label", "Unterhaltung löschen: " + (c.titel || ""));
+    weg.title = "Löschen";
+    weg.appendChild(svg(ICON_MUELL));
+    weg.onclick = () => chatLoeschen(c.id);
+    li.appendChild(auf); li.appendChild(weg);
+    ul.appendChild(li);
+  }
+  $("chatleer").hidden = chats.length > 0;
+  $("alle-loeschen").hidden = chats.length === 0;
+}
+const BEISPIELE = ["Was sind die Säulen des Islams?", "Abdesti bozan durumlar nelerdir?", "Was bricht das Fasten?"];
+function willkommenZeigen() {
+  const box = el("section", "willkommen");
+  box.id = "willkommen";
+  box.appendChild(el("h2", "", "Was möchtest du wissen?"));
+  box.appendChild(el("p", "", "Frag auf Deutsch oder Türkisch. SeydaAI antwortet aus Diyanet und TDV und nennt zu jeder Antwort die Quellen."));
+  const b = el("div", "beispiele");
+  for (const t of BEISPIELE) {
+    const k = el("button", "", t);
+    k.type = "button";
+    k.onclick = () => { eingabe.value = t; senden(); };
+    b.appendChild(k);
+  }
+  box.appendChild(b);
+  verlauf.appendChild(box);
+}
+function ansichtLeeren() {
+  vorleseStopp();
+  verlauf.textContent = "";
+  wartenEl = null;
+  sprachstatus.textContent = "";
+}
+let wartenEl = null;
+function ansichtAufbauen() {
+  ansichtLeeren();
+  if (aktiv) for (const e of aktiv.eintraege) { verlauf.appendChild(el("div", "frage", e.frage)); antwortZeigen(e.frage, e.daten); }
+  if (aktiv && ausstehend.has(aktiv.id)) {
+    verlauf.appendChild(el("div", "frage", ausstehend.get(aktiv.id)));
+    wartenEl = verlauf.appendChild(wartenAnzeige());
+  } else if (!aktiv || !aktiv.eintraege.length) willkommenZeigen();
+  if (laeuft && !(aktiv && ausstehend.has(aktiv.id))) sprachstatus.textContent = "In einer anderen Unterhaltung lädt noch eine Antwort.";
+}
+function chatOeffnen(id) {
+  aktiv = chats.find(c => c.id === id) || null;
+  aktivMerken(aktiv ? aktiv.id : "");
+  ansichtAufbauen();
+  listeZeigen();
+  leisteSchliessen();
+  requestAnimationFrame(() => window.scrollTo({top: aktiv ? document.documentElement.scrollHeight : 0}));
+}
+function neuerChat() {
+  aktiv = null;
+  aktivMerken("");
+  ansichtAufbauen();
+  listeZeigen();
+  leisteSchliessen();
+  window.scrollTo({top: 0});
+  if (!beruehrung) eingabe.focus({preventScroll: true});
+}
+function chatLoeschen(id) {
+  const c = chats.find(x => x.id === id);
+  if (!c || !confirm("Diese Unterhaltung löschen?\n\n" + (c.titel || ""))) return;
+  alsGeloeschtMerken([id]);
+  chats = chats.filter(x => x.id !== id);
+  sichern();
+  if (aktiv && aktiv.id === id) neuerChat(); else listeZeigen();
+}
+function alleWeg() {
+  // Auch Unterhaltungen, deren Antwort noch lädt, damit eine späte Antwort sie nicht zurückholt
+  for (const c of chats) geloescht.add(c.id);
+  for (const id of ausstehend.keys()) geloescht.add(id);
+  if (aktiv) geloescht.add(aktiv.id);
+}
+function alleLoeschen() {
+  alleWeg();
+  alsGeloeschtMerken([...chats.map(c => c.id), ...speicher.laden().map(c => c.id), ...ausstehend.keys(), ...(aktiv ? [aktiv.id] : [])]);
+  // Andere Fenster löschen damit auch ihre neuen Unterhaltungen, deren Antwort noch lädt (zufällige Marke, kein Inhalt)
+  if (verlaufAn()) merken("seyda_alle_weg", neueId());
+  chats = [];
+  vergessen("seyda_chats");
+  neuerChat();
+}
+$("alle-loeschen").onclick = () => { if (confirm("Alle Unterhaltungen auf diesem Gerät löschen?")) alleLoeschen(); };
+$("neu").onclick = neuerChat;
+// Ändert ein anderes Fenster den Verlauf oder seine Einstellung, hier nachziehen
+window.addEventListener("storage", (ev) => {
+  if (ev.key === "seyda_verlauf") {
+    // Dort ein oder ausgeschaltet: hier genauso frisch beginnen wie beim eigenen Schalter
+    alleWeg();
+    chats = verlaufAn() ? speicher.laden() : [];
+    $("verlauf-an").checked = verlaufAn();
+    neuerChat();
+    speicherHinweis();
+    sprachstatus.textContent = verlaufAn()
+      ? "Der Verlauf wurde in einem anderen Fenster eingeschaltet." : "Der Verlauf wurde in einem anderen Fenster ausgeschaltet.";
+    return;
+  }
+  if (ev.key === "seyda_alle_weg") {
+    alleWeg();
+    chats = [];
+    neuerChat();
+    sprachstatus.textContent = "Alle Unterhaltungen wurden in einem anderen Fenster gelöscht.";
+    return;
+  }
+  if (ev.key !== "seyda_chats" && ev.key !== "seyda_geloescht" && ev.key !== null) return;
+  const offenId = aktiv ? aktiv.id : null;
+  const schonWeg = offenId !== null && geloescht.has(offenId);
+  if (ev.key === null) for (const c of chats) geloescht.add(c.id);  // dort wurde der ganze Speicher geleert
+  // Neue Fassungen von dort übernehmen; was dort gelöscht wurde, fällt hier weg und wird nicht wieder gespeichert,
+  // auch wenn die Antwort darauf hier noch lädt. Eigene Unterhaltungen, die dort nur überschrieben wurden, bleiben.
+  const gespeichert = speicher.laden();
+  chats = zusammenfuehren(chats, gespeichert);
+  // Haben zwei Fenster fast gleichzeitig gespeichert, fehlt dort vielleicht eine neuere Fassung von hier: zurückschreiben
+  const stand = new Map(gespeichert.map(c => [c.id, c.zeit || 0]));
+  if (verlaufAn() && chats.some(c => !stand.has(c.id) || (c.zeit || 0) > stand.get(c.id))) sichern(true);
+  if (offenId !== null && !schonWeg && geloescht.has(offenId) && !ausstehend.has(offenId)) {
+    neuerChat();
+    sprachstatus.textContent = "Diese Unterhaltung wurde in einem anderen Fenster gelöscht.";
+    return;
+  }
+  listeZeigen();
+});
+$("neu-oben").onclick = neuerChat;
+
+// Menü auf dem Handy
+let fokusVorher = null;
+function leisteOeffnen() {
+  fokusVorher = document.activeElement;
+  leiste.classList.add("offen");
+  abdeckung.hidden = false;
+  document.querySelector(".app").inert = true;
+  menu.setAttribute("aria-expanded", "true");
+  $("neu").focus({preventScroll: true});
+}
+function leisteSchliessen() {
+  if (!leiste.classList.contains("offen")) return;
+  leiste.classList.remove("offen");
+  abdeckung.hidden = true;
+  document.querySelector(".app").inert = false;
+  menu.setAttribute("aria-expanded", "false");
+  if (fokusVorher && fokusVorher === menu) menu.focus({preventScroll: true});
+}
+menu.onclick = leisteOeffnen;
+$("leiste-zu").onclick = leisteSchliessen;
+abdeckung.onclick = leisteSchliessen;
+document.addEventListener("keydown", (ev) => { if (ev.key === "Escape") leisteSchliessen(); });
+const breit = window.matchMedia("(min-width: 900px)");
+const breitGeaendert = () => { if (breit.matches) leisteSchliessen(); };
+if (breit.addEventListener) breit.addEventListener("change", breitGeaendert); else if (breit.addListener) breit.addListener(breitGeaendert);
+
+// ---------- Fragen ----------
+function wartenAnzeige() {
+  const w = el("div", "antwort warten");
+  w.setAttribute("role", "status");
+  const p = el("span", "punkte");
+  for (let i = 0; i < 3; i++) p.appendChild(el("i"));
+  w.appendChild(p);
+  w.appendChild(el("span", "", "Suche in den Quellen …"));
+  return w;
+}
+async function senden() {
+  const frage = eingabe.value.trim();
+  if (!frage) return;
+  if (laeuft) { sprachstatus.textContent = "Bitte warten, bis die vorige Antwort da ist."; return; }
+  if (!aktiv || geloescht.has(aktiv.id)) aktiv = {id: neueId(), titel: frage.slice(0, 60), zeit: Date.now(), eintraege: []};
+  const chat = aktiv;
+  const w = $("willkommen"); if (w) w.remove();
+  verlauf.appendChild(el("div", "frage", frage));
+  eingabe.value = "";
+  sprachstatus.textContent = "";
+  laeuft = true; knopf.classList.add("wartet");
+  ausstehend.set(chat.id, frage);
+  if (beruehrung) eingabe.blur();
+  wartenEl = verlauf.appendChild(wartenAnzeige());
+  nachUnten();
+  const koerper = JSON.stringify({frage, verlauf: gespraechFuer(chat)});
+  // Ist die Unterhaltung beim Eintreffen noch offen, kommt die Antwort direkt darunter
+  const offen = () => aktiv && aktiv.id === chat.id;
+  const fertig = () => { ausstehend.delete(chat.id); if (wartenEl) { wartenEl.remove(); wartenEl = null; } };
+  try {
+    const r = await fetch("/api/frage", {method: "POST", headers: {"Content-Type": "application/json"}, body: koerper});
+    let daten = {};
+    try { daten = await r.json(); } catch (e) {}
+    fertig();
+    if (r.status === 401 && daten.anmelden) {
+      if (offen()) zeigen(verlauf.appendChild(el("div", "antwort fehler", "Bitte zuerst anmelden und die Frage dann noch einmal senden.")));
+      if (!eingabe.value) eingabe.value = frage;
+      anmeldungZeigen("Bitte melde dich an. Deine Frage steht danach wieder im Eingabefeld.");
+      return;
+    }
+    if (!r.ok) {
+      if (offen()) zeigen(verlauf.appendChild(el("div", "antwort fehler", daten.fehler || "Fehler")));
+      return;
+    }
+    // Krisenantworten und gelöschte Unterhaltungen kommen nicht in den Verlauf
+    const merkbar = daten.art !== "krise" && !geloescht.has(chat.id);
+    if (merkbar) {
+      // Hat ein anderes Fenster die Unterhaltung inzwischen neu geladen, zählt die neueste Fassung
+      const ziel = (aktiv && aktiv.id === chat.id ? aktiv : chats.find(c => c.id === chat.id)) || chat;
+      if (!ziel.eintraege.length) ziel.titel = frage.slice(0, 60);
+      ziel.eintraege.push(sauberEintrag({frage, daten: kompakt(daten), zeit: Date.now()}));
+      if (ziel.eintraege.length > MAX_EINTRAEGE) ziel.eintraege.shift();
+      ziel.zeit = Date.now();
+      chats = [ziel, ...chats.filter(c => c.id !== ziel.id)];
+      sichern();
+      if (offen()) aktivMerken(chat.id);
+      listeZeigen();
+    }
+    if (offen()) zeigen(antwortZeigen(frage, daten));
+  } catch (e) {
+    fertig();
+    status(false);
+    if (offen()) zeigen(verlauf.appendChild(el("div", "antwort fehler", "Keine Verbindung zum Server.")));
+  } finally {
+    laeuft = false; knopf.classList.remove("wartet");
+    if (sprachstatus.textContent.startsWith("In einer anderen Unterhaltung")) sprachstatus.textContent = "";
+    if (!beruehrung) eingabe.focus({preventScroll: true});
+  }
+}
+formular.addEventListener("submit", (ev) => { ev.preventDefault(); senden(); });
+
+// ---------- Vorlesen ----------
+// Wählt je Sprache die deutlichste Stimme, die das Gerät anbietet: zuerst natürliche Stimmen (Microsoft Edge "Online (Natural)",
+// Android "Natural"), dann verbesserte Apple Stimmen, dann Google Stimmen, zuletzt die übrigen. Türkische Zitate in deutschen
+// Antworten liest die türkische Stimme. Onlinestimmen nur nach Zustimmung, weil der Text dann zum Anbieter der Stimme geht.
+const tts = window.speechSynthesis || null;
+const LAND = {de: "de-de", tr: "tr-tr"};
+let stimmen = [];
+function stimmenLaden() { try { stimmen = tts ? (tts.getVoices() || []) : []; } catch (e) { stimmen = []; } return stimmen; }
+if (tts) { stimmenLaden(); tts.onvoiceschanged = () => { stimmenLaden(); if (dialog.open) einstellungenFuellen(); }; }
+const code = (v) => String(v.lang || "").replace("_", "-").toLowerCase();
+function guete(v) {
+  const n = v.name || "";
+  if (/natural|neural/i.test(n)) return 4;
+  if (/premium|enhanced|erweitert|verbessert|geliştirilmiş|gelistirilmis/i.test(n)) return 3;
+  if (/^google\b|network/i.test(n)) return 2;
+  return 1;
+}
+function stimmenFuer(kurz) {
+  return stimmen.filter(v => code(v).startsWith(kurz)).sort((a, b) =>
+    guete(b) - guete(a) ||
+    (code(b) === LAND[kurz]) - (code(a) === LAND[kurz]) ||
+    (b.localService === true) - (a.localService === true) ||
+    String(a.name).localeCompare(String(b.name)));
+}
+function stimmeWaehlen(kurz) {
+  const auswahl = stimmenFuer(kurz);
+  const name = gemerkt("seyda_stimme_" + kurz);
+  // Eine selbst gewählte Stimme gilt, eine Onlinestimme aber nur, solange Onlinestimmen erlaubt sind
+  if (name) {
+    const v = auswahl.find(x => x.name === name);
+    if (v && (v.localService || gemerkt("seyda_online_stimme") === "ja")) return v;
+  }
+  if (!auswahl.length) return null;
+  const beste = auswahl[0];
+  if (beste.localService) return beste;
+  let erlaubt = gemerkt("seyda_online_stimme");
+  if (erlaubt !== "ja" && erlaubt !== "nein") {
+    erlaubt = confirm("Am deutlichsten klingt hier die Onlinestimme „" + stimmenName(beste) + "“. Dafür geht der vorgelesene Text " +
+      "an den Anbieter der Stimme, zum Beispiel Microsoft oder Google.\n\nOK = Onlinestimme, Abbrechen = Stimme auf dem Gerät.\n" +
+      "Ändern lässt sich das später über das Zahnrad.") ? "ja" : "nein";
+    merken("seyda_online_stimme", erlaubt);
+  }
+  if (erlaubt === "ja") return beste;
+  return auswahl.find(x => x.localService) || null;
+}
+function keineStimme(kurz) {
+  const sprache = kurz === "tr" ? "türkische" : "deutsche";
+  if (stimmenFuer(kurz).length) return "Für diese Sprache gibt es hier nur Onlinestimmen. Über das Zahnrad lassen sie sich erlauben.";
+  return "Auf diesem Gerät ist keine " + sprache + " Stimme zum Vorlesen installiert. Am PC hat Microsoft Edge gute " + sprache +
+    " Stimmen; sonst in den Einstellungen des Geräts unter Sprachausgabe eine " + sprache + " Stimme hinzufügen.";
+}
+
+// Text für die Stimme vorbereiten: Formatzeichen, Links und arabische Schrift weg, Abkürzungen ausschreiben
+const VORNE = "(^|[^\\p{L}])";
+const abk = (kuerzel, lang) => [new RegExp(VORNE + kuerzel.replace(/\./g, "\\.\\s?").replace(/\\s\?$/, ""), "gu"), "$1" + lang];
+const ABKUERZUNGEN = {
+  de: [abk("z.B.", "zum Beispiel"), abk("d.h.", "das heißt"), abk("u.a.", "unter anderem"), abk("bzw.", "beziehungsweise"),
+       abk("ggf.", "gegebenenfalls"), abk("vgl.", "vergleiche"), abk("usw.", "und so weiter"), abk("ca.", "circa"), abk("Nr.", "Nummer")],
+  tr: [abk("vb.", "ve benzeri"), abk("vs.", "vesaire"), abk("bk.", "bakınız"), abk("örn.", "örneğin"), abk("yy.", "yüzyıl")],
+};
+const FORMELN = [
+  [/ﷺ/g, " sallallahu aleyhi ve sellem "],
+  [/\(\s*s\.\s?a\.\s?[vs]\.?\s*\)/gi, "sallallahu aleyhi ve sellem"],
+  [/\(\s*a\.\s?s\.?\s*\)/gi, "aleyhisselam"],
+  [/\(\s*r\.\s?a\.?\s*\)/gi, "radıyallahu anh"],
+  [/\(\s*k\.\s?s\.?\s*\)/gi, "kuddise sirruh"],
+  [/\(\s*c\.\s?c\.?\s*\)/gi, "celle celalühü"],
+  [new RegExp(VORNE + "Hz\\.", "gu"), "$1Hazreti"],
+];
+function sprechtext(text, kurz) {
+  let t = String(text);
+  for (const [m, r] of FORMELN) t = t.replace(m, r);
+  for (const [m, r] of ABKUERZUNGEN[kurz]) t = t.replace(m, r);
+  return t.replace(/https?:\/\/\S+/g, " ")
+    .replace(/[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]+/g, " ")
+    .replace(/\*\*/g, "")
+    .replace(/^\s*#+\s*/gm, "")
+    .replace(/^\s*[-*•]\s+/gm, "")
+    .replace(/[ \t]+/g, " ");
+}
+const DE_WORT = new RegExp(VORNE + "(der|die|das|den|dem|des|ist|sind|was|wie|warum|wann|ich|du|und|oder|darf|macht|kann|muss|soll|ein|eine|einen|bei|nach|wenn|für|nicht|auch|mit|von|zu|im|werden|wird)(?=$|[^\\p{L}])", "giu");
+const TR_WORT = new RegExp(VORNE + "(ne|neden|nasıl|nedir|mi|mı|mu|mü|midir|ve|ile|bir|bu|şu|için|olur|olmaz|gerekir|var|yok|hangi|kaç|olan|olarak|ise|gibi|daha|çok|her|veya|değil|kadar|şey|ki|da|de)(?=$|[^\\p{L}])", "giu");
+function satzSprache(satz, kurz) {
+  // Ein Satz gilt nur dann als andere Sprache, wenn er mindestens zwei ihrer kleinen Wörter enthält und keines der
+  // Antwortsprache. "Dazu gehören Kıyâm, Kırâat, Rükû und Secde." bleibt so deutsch, Fachbegriffe allein zählen nicht.
+  const de = (satz.match(DE_WORT) || []).length;
+  const tr = (satz.match(TR_WORT) || []).length;
+  if (kurz === "de") return tr >= 2 && de === 0 ? "tr" : "de";
+  return de >= 2 && tr === 0 ? "de" : "tr";
+}
+const MAX_STUECK = 170;  // kurze Stücke, weil manche Browser lange Texte nach etwa 14 Sekunden abbrechen
+function kuerzen(text) {
+  if (text.length <= MAX_STUECK) return [text];
+  const aus = [];
+  let akt = "";
+  const dazu = (t) => { if (akt && (akt + t).length > MAX_STUECK) { aus.push(akt); akt = ""; } akt += t; };
+  for (const teil of text.match(/[^,;:]+[,;:]?\s*/g) || [text]) {
+    if (teil.length > MAX_STUECK) for (const wort of teil.split(/(\s+)/)) dazu(wort);
+    else dazu(teil);
+  }
+  if (akt.trim()) aus.push(akt);
+  return aus;
+}
+function vorleseStuecke(text, kurz) {
+  const zeilen = sprechtext(text, kurz).split("\n").map(z => z.trim());
+  const stuecke = [];
+  zeilen.forEach((zeile, i) => {
+    if (!/[\p{L}\p{N}]/u.test(zeile)) return;
+    // Ein Zitat steht laut Antwortregel in der Zeile vor "Maschinelle Übersetzung:" und ist türkisch
+    const naechste = zeilen.slice(i + 1).find(z => z) || "";
+    const zitat = kurz === "de" && /^maschinelle übersetzung/i.test(naechste);
+    let akt = null;
+    for (const satz of zeile.match(/[^.!?…]+(?:[.!?…]+|$)\s*/g) || [zeile]) {
+      if (!satz.trim()) continue;
+      const sp = zitat ? "tr" : satzSprache(satz, kurz);
+      if (akt && akt.sprache === sp && (akt.text + satz).length <= MAX_STUECK) akt.text += satz;
+      else { if (akt) stuecke.push(akt); akt = {text: satz, sprache: sp, zitat}; }
+    }
+    if (akt) stuecke.push(akt);
+  });
+  return stuecke.flatMap(s => kuerzen(s.text).map(t => ({text: t.trim(), sprache: s.sprache, zitat: s.zitat}))).filter(s => s.text);
+}
+let aktiverKnopf = null, lauf = 0;
+function knopfZustand(k, an) {
+  k.textContent = "";
+  k.appendChild(svg(an ? ICON_STOPP : ICON_LAUT));
+  k.appendChild(document.createTextNode(an ? "Stopp" : "Vorlesen"));
+  k.setAttribute("aria-pressed", String(an));
+}
+function vorleseStopp() {
+  lauf++;
+  if (tts) tts.cancel();
+  if (aktiverKnopf) knopfZustand(aktiverKnopf, false);
+  aktiverKnopf = null;
+}
+function sprechen(text, sprache, fertig) {
+  const kurz = sprache === "tr" ? "tr" : "de";
+  stimmenLaden();
+  let stuecke = vorleseStuecke(text, kurz);
+  if (!stuecke.length) return false;
+  let haupt = null, andere = null;
+  // Manche Handys (Chrome auf Android) nennen keine Stimmenliste; dann wählt das System die Stimme zur Sprache
+  if (stimmen.length) {
+    haupt = stimmeWaehlen(kurz);
+    if (!haupt) { sprachstatus.textContent = keineStimme(kurz); return false; }
+    const zweite = kurz === "de" ? "tr" : "de";
+    if (stuecke.some(s => s.sprache === zweite)) andere = stimmeWaehlen(zweite);
+  }
+  sprachstatus.textContent = "";
+  if (stimmen.length && !andere && stuecke.some(s => s.sprache !== kurz)) {
+    // Fehlt die Stimme der anderen Sprache: Das türkische Zitat fällt weg, weil seine Übersetzung direkt darunter
+    // gelesen wird. Alles andere liest die Stimme der Antwortsprache, damit kein Inhalt verloren geht.
+    if (stuecke.some(s => s.zitat)) sprachstatus.textContent =
+      "Das türkische Zitat wird übersprungen, weil auf diesem Gerät keine türkische Stimme bereitsteht. Die Übersetzung darunter wird gelesen.";
+    stuecke = stuecke.filter(s => !s.zitat).map(s => ({...s, sprache: kurz}));
+    if (!stuecke.length) return false;
+  }
+  const tempo = parseFloat(gemerkt("seyda_tempo")) || 0.9;
+  const meinLauf = ++lauf;
+  stuecke.forEach((s, i) => {
+    const u = new SpeechSynthesisUtterance(s.text);
+    const v = s.sprache === kurz ? haupt : andere;
+    if (v) { u.voice = v; u.lang = v.lang; }
+    else u.lang = s.sprache === "tr" ? "tr-TR" : "de-DE";
+    u.rate = tempo;
+    if (i === stuecke.length - 1) u.onend = u.onerror = () => { if (meinLauf === lauf && fertig) fertig(); };
+    tts.speak(u);
+  });
+  return true;
+}
+function vorleseKnopf(text, sprache) {
+  const k = el("button", "vorlesen");
+  k.type = "button";
+  knopfZustand(k, false);
+  k.onclick = () => {
+    const warAktiv = aktiverKnopf === k;
+    vorleseStopp();
+    if (warAktiv) return;
+    if (sprechen(text, sprache, () => { if (aktiverKnopf === k) { knopfZustand(k, false); aktiverKnopf = null; } })) {
+      aktiverKnopf = k;
+      knopfZustand(k, true);
+    }
+  };
+  return k;
+}
+
+// Einstellungen: Stimme je Sprache, Tempo, Onlinestimmen
+const PROBE = {de: "Das ist eine Hörprobe. So klingt SeydaAI beim Vorlesen.", tr: "Bu bir ses denemesidir. SeydaAI cevapları böyle okur."};
+function stimmenName(v) {
+  const name = String(v.name).replace(/^Microsoft\s+/, "").replace(/\s+-\s+[^-]+$/, "").replace(/\s*-\s*/g, " ");
+  let region = "";
+  if (code(v) !== LAND[code(v).slice(0, 2)]) {
+    try { region = " " + new Intl.DisplayNames(["de"], {type: "region"}).of(code(v).slice(3).toUpperCase()); } catch (e) { region = ""; }
+  }
+  return name + region + (v.localService || /online/i.test(name) ? "" : " (online)");
+}
+function einstellungenFuellen() {
+  stimmenLaden();
+  for (const kurz of ["de", "tr"]) {
+    const sel = $("stimme-" + kurz);
+    sel.textContent = "";
+    const auto = el("option", "", "Automatisch (beste Stimme)");
+    auto.value = "";
+    sel.appendChild(auto);
+    for (const v of stimmenFuer(kurz)) { const o = el("option", "", stimmenName(v)); o.value = v.name; sel.appendChild(o); }
+    sel.value = gemerkt("seyda_stimme_" + kurz) || "";
+    if (sel.value !== (gemerkt("seyda_stimme_" + kurz) || "")) sel.value = "";
+  }
+  $("tempo").value = gemerkt("seyda_tempo") || "0.9";
+  $("online").checked = gemerkt("seyda_online_stimme") === "ja";
+  $("verlauf-an").checked = verlaufAn();
+  const hinweise = [];
+  if (!tts) hinweise.push("Dieses Gerät kann nicht vorlesen.");
+  else if (!stimmen.length) hinweise.push("Dieses Gerät nennt keine Stimmenliste. Es liest mit der Standardstimme des Systems; bessere Stimmen lassen sich in den Einstellungen des Geräts unter Sprachausgabe installieren.");
+  else {
+    if (!stimmenFuer("tr").length) hinweise.push("Keine türkische Stimme gefunden.");
+    if (!stimmen.some(v => guete(v) === 4) && !beruehrung) hinweise.push("Tipp: Am PC klingen die Stimmen in Microsoft Edge am natürlichsten.");
+  }
+  $("stimmen-hinweis").textContent = hinweise.join(" ");
+}
+for (const kurz of ["de", "tr"]) {
+  $("stimme-" + kurz).onchange = (ev) => {
+    const v = stimmenFuer(kurz).find(x => x.name === ev.target.value);
+    if (!v) { vergessen("seyda_stimme_" + kurz); return; }
+    merken("seyda_stimme_" + kurz, v.name);
+    // Wer selbst eine Onlinestimme wählt, erlaubt damit Onlinestimmen; der Schalter zeigt das an
+    if (!v.localService) { merken("seyda_online_stimme", "ja"); $("online").checked = true; }
+  };
+}
+$("tempo").onchange = (ev) => merken("seyda_tempo", ev.target.value);
+$("verlauf-an").onchange = (ev) => {
+  // Ein und aus beginnt jeweils frisch: Was bei ausgeschaltetem Verlauf gefragt wurde, kommt nie in den Speicher,
+  // und was beim Ausschalten gelöscht wurde, kommt beim Einschalten nicht zurück
+  alleWeg();
+  chats = [];
+  if (ev.target.checked) merken("seyda_verlauf", "an");
+  else { merken("seyda_verlauf", "aus"); vergessen("seyda_chats"); vergessen("seyda_geloescht"); vergessen("seyda_alle_weg"); }
+  neuerChat();
+  speicherHinweis();
+};
+$("online").onchange = (ev) => {
+  merken("seyda_online_stimme", ev.target.checked ? "ja" : "nein");
+  if (!ev.target.checked) {
+    for (const kurz of ["de", "tr"]) {
+      const v = stimmenFuer(kurz).find(x => x.name === gemerkt("seyda_stimme_" + kurz));
+      if (v && !v.localService) { vergessen("seyda_stimme_" + kurz); $("stimme-" + kurz).value = ""; }
+    }
+  }
+};
+for (const b of dialog.querySelectorAll("[data-probe]")) {
+  b.onclick = () => {
+    vorleseStopp();
+    if (!sprechen(PROBE[b.dataset.probe], b.dataset.probe, null)) $("stimmen-hinweis").textContent = sprachstatus.textContent;
+  };
+}
+if (typeof dialog.showModal === "function") {
+  $("zahnrad").onclick = () => { einstellungenFuellen(); dialog.showModal(); };
+  dialog.addEventListener("close", () => { if (!aktiverKnopf) vorleseStopp(); });  // Hörprobe beenden, laufendes Vorlesen nicht
+} else {
+  $("zahnrad").hidden = true;
+}
+
+// ---------- Spracheingabe ----------
+// Web Speech API. Der Text landet im Eingabefeld und wird erst nach Prüfung gesendet.
+const Erkennung = window.SpeechRecognition || window.webkitSpeechRecognition;
+let erkennung = null;
+let mikroSprache = gemerkt("seyda_mikro") || ((navigator.language || "").toLowerCase().startsWith("tr") ? "tr-TR" : "de-DE");
+function sprachwahlZeigen() {
+  for (const b of sprachwahl.querySelectorAll("button")) b.setAttribute("aria-pressed", String(b.dataset.sprache === mikroSprache));
+}
+const FEHLER_MIKRO = {
+  "not-allowed": "Das Mikrofon ist nicht erlaubt. Bitte in der Adresszeile erlauben.",
+  "service-not-allowed": "Die Spracheingabe ist hier nicht erlaubt.",
+  "no-speech": "Ich habe nichts gehört. Bitte noch einmal versuchen.",
+  "audio-capture": "Kein Mikrofon gefunden.",
+  "network": "Für die Spracheingabe braucht das Gerät eine Internetverbindung.",
+  "language-not-supported": "Diese Sprache kennt die Spracheingabe auf diesem Gerät nicht.",
+};
+async function lokalMoeglich() {
+  try {
+    if (typeof Erkennung.available !== "function") return false;
+    return (await Erkennung.available({langs: [mikroSprache], processLocally: true})) === "available";
+  } catch (e) { return false; }
+}
+if (Erkennung) {
+  mikro.hidden = false;
+  sprachwahl.hidden = false;
+  sprachwahlZeigen();
+  sprachwahl.addEventListener("click", (ev) => {
+    const b = ev.target.closest("button");
+    if (!b) return;
+    mikroSprache = b.dataset.sprache;
+    merken("seyda_mikro", mikroSprache);
+    sprachwahlZeigen();
+  });
+  mikro.onclick = async () => {
+    if (erkennung) { erkennung.stop(); return; }
+    vorleseStopp();
+    const lokal = await lokalMoeglich();
+    if (!lokal && gemerkt("seyda_mikro_ok") !== "ja") {
+      const ok = confirm("Für die Spracheingabe schickt das Gerät die Aufnahme zur Erkennung an einen Onlinedienst. " +
+        "SeydaAI selbst speichert keine Aufnahme. Weiter?");
+      if (!ok) return;
+      merken("seyda_mikro_ok", "ja");
+    }
+    const e = new Erkennung();
+    e.lang = mikroSprache;
+    e.interimResults = true;
+    e.continuous = false;
+    if (lokal) e.processLocally = true;
+    const vorher = eingabe.value.trim();
+    let gehoert = false;
+    e.onresult = (ev) => {
+      let text = "";
+      for (const r of ev.results) text += r[0].transcript;
+      gehoert = gehoert || !!text.trim();
+      eingabe.value = (vorher ? vorher + " " : "") + text.trim();
+    };
+    e.onerror = (ev) => { sprachstatus.textContent = FEHLER_MIKRO[ev.error] || "Die Spracheingabe hat nicht geklappt."; };
+    e.onend = () => {
+      erkennung = null;
+      mikro.classList.remove("an");
+      mikro.setAttribute("aria-label", "Frage einsprechen");
+      if (gehoert) sprachstatus.textContent = "Bitte den Text prüfen und dann senden.";
+      eingabe.focus({preventScroll: true});
+    };
+    try {
+      e.start();
+    } catch (fehler) {
+      sprachstatus.textContent = "Die Spracheingabe ließ sich nicht starten.";
+      return;
+    }
+    erkennung = e;
+    mikro.classList.add("an");
+    mikro.setAttribute("aria-label", "Aufnahme beenden");
+    sprachstatus.textContent = "Ich höre zu. Zum Beenden noch einmal auf das Mikrofon tippen.";
+  };
+}
+
+// Start: zuletzt offene Unterhaltung wieder zeigen, sonst einen neuen Chat
+speicherHinweis();
+listeZeigen();
+const zuletzt = gemerkt("seyda_aktiv");
+if (zuletzt && chats.some(c => c.id === zuletzt)) chatOeffnen(zuletzt); else neuerChat();
+</script>
+</body>
+</html>
