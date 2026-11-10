@@ -223,7 +223,7 @@ if ($wahl -match '^[dDaA]') {
 
 # 4. Prüfset (freiwillig): 20 Grundfragen und eine Rückfrage, Bericht als Datei
 Abschnitt "Prüfset"
-$wahl = Read-Host "Prüfset mit 20 Grundfragen laufen lassen? p = ja (dauert einige Minuten, kostet geschätzt 20 bis 60 US Cent, zählt 21 Fragen zum Tageslimit), Enter = nein"
+$wahl = Read-Host "Prüfset mit 20 Grundfragen laufen lassen? p = ja (dauert einige Minuten, kostet geschätzt 40 US Cent bis 1 US Dollar, zählt 21 Fragen zum Tageslimit), Enter = nein"
 if ($wahl -match '^[pP]') {
     $env:ANTHROPIC_API_KEY = $schluessel
     & $venvPy pruefset.py

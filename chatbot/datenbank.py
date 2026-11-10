@@ -143,6 +143,17 @@ def abschnitte_nach_nr(con, nummern: list[int]) -> list[dict]:
     return ergebnis
 
 
+def abschnitt_danach(con, abschnitt: dict):
+    """Der nächste Abschnitt derselben Seite. Einlesen speichert die Abschnitte einer Seite der Reihe nach,
+    darum hat er die nächsthöhere Nummer (rowid). Gesucht wird nur in einem kleinen Bereich dahinter."""
+    z = con.execute(
+        "SELECT rowid AS nr, text, titel, url, quelle, nur_zusammenfassen FROM abschnitte "
+        "WHERE rowid > ? AND rowid <= ? AND url = ? ORDER BY rowid LIMIT 1",
+        (abschnitt["nr"], abschnitt["nr"] + 3, abschnitt["url"]),
+    ).fetchone()
+    return dict(z) if z else None
+
+
 def abschnitte_von(con, urls: list[str], je_seite: int = 2) -> list[dict]:
     """Die ersten Abschnitte bestimmter Seiten, falls die zitierten Abschnitte nicht bekannt sind."""
     ergebnis = []

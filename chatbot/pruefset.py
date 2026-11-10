@@ -1,7 +1,7 @@
 """Prüfset: stellt 20 Grundfragen und eine Rückfrage und schreibt die Antworten in einen Bericht.
 
 Aufruf:  python pruefset.py
-Braucht ANTHROPIC_API_KEY und eingelesene Quellen. Kostet geschätzt 20 bis 60 US Cent pro Lauf.
+Braucht ANTHROPIC_API_KEY und eingelesene Quellen. Kostet geschätzt 40 US Cent bis 1 US Dollar pro Lauf.
 Der Bericht landet als pruefbericht_JJJJ-MM-TT_HHMM.md im Ordner von SeydaAI. So lässt sich vorher
 und nachher vergleichen, ob eine Änderung die Antworten besser macht.
 Die Fragen zählen zum Tageslimit (SEYDA_MAX_FRAGEN), weil sie wie echte Fragen an Claude gehen.
