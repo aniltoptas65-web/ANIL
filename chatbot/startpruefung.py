@@ -12,9 +12,8 @@ def quellen() -> int:
     from datenbank import fremde_quellen_entfernen, verbinden
 
     con = verbinden()
-    entfernt = fremde_quellen_entfernen(con)
-    if entfernt:
-        print(f"{entfernt} Seiten von Quellen entfernt, die nicht mehr in quellen.json stehen")
+    # Still entfernen: Die Ausgabe dieses Befehls liest starten.ps1 als Liste der eingelesenen Quellen
+    fremde_quellen_entfernen(con)
     for quelle, anzahl in con.execute("SELECT quelle, COUNT(*) FROM seiten GROUP BY quelle ORDER BY quelle"):
         print(f"{quelle}: {anzahl} {'Seite' if anzahl == 1 else 'Seiten'}")
     alt = con.execute("SELECT COUNT(*) FROM seiten WHERE regel IS NULL").fetchone()[0]

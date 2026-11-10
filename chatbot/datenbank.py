@@ -105,8 +105,11 @@ def quellen_laden() -> list[dict]:
 def fremde_quellen_entfernen(con) -> int:
     """Löscht Seiten und Abschnitte von Quellen, die nicht mehr in quellen.json stehen
     (zum Beispiel Semerkand und Serhendi, seit 10. November 2026 entfernt). Gibt die Zahl der Seiten zurück."""
-    namen = [q["name"] for q in quellen_laden()]
-    if not namen:  # leere oder kaputte Liste: lieber nichts löschen
+    try:
+        namen = [q["name"] for q in quellen_laden()]
+    except (OSError, ValueError, KeyError, TypeError):
+        return 0  # quellen.json fehlt oder ist kaputt: lieber nichts löschen und trotzdem starten
+    if not namen:  # leere Liste: ebenfalls nichts löschen
         return 0
     platz = ",".join("?" * len(namen))
     seiten = con.execute(f"SELECT COUNT(*) FROM seiten WHERE quelle NOT IN ({platz})", namen).fetchone()[0]

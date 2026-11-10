@@ -2,7 +2,7 @@
 
 Arbeitsname SeydaAI (Name noch offen zwischen SeydaAI und EhliSunnahAI). Nur für den internen Test durch Anil, nicht öffentlich. Betreiber: Verein Reyhani Europa e.V.
 
-Der Bot beantwortet Fragen ausschließlich aus eingelesenen öffentlichen Seiten von Diyanet (Din İşleri Yüksek Kurulu), und TDV İslâm Ansiklopedisi. Jede Antwort nennt ihre Quellen mit Link. Findet er nichts, sagt er das.
+Der Bot beantwortet Fragen ausschließlich aus eingelesenen öffentlichen Seiten von Diyanet (Din İşleri Yüksek Kurulu) und TDV İslâm Ansiklopedisi. Jede Antwort nennt ihre Quellen mit Link. Findet er nichts, sagt er das.
 
 ## So funktioniert es
 
